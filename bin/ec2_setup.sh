@@ -27,11 +27,11 @@ echo "Installing script dependencies"
 cd /home/ubuntu/crunchy-backups/
 pip3 install -r requirements.txt
 cat << EOF > ./bin/.env
-CRUNCHY_API_KEY = ""
-CRUNCHY_TEAM_ID = ""
+CRUNCHY_API_KEY = "$CRUNCHY_API_KEY"
+CRUNCHY_TEAM_ID = "$CRUNCHY_TEAM_ID"
 
-ASPIRE_AWS_ACCESS_KEY_ID = ""
-ASPIRE_AWS_SECRET_ACCESS_KEY = ""
+ASPIRE_AWS_ACCESS_KEY_ID = "$ASPIRE_AWS_ACCESS_KEY_ID"
+ASPIRE_AWS_SECRET_ACCESS_KEY = "$ASPIRE_AWS_SECRET_ACCESS_KEY"
 
 CLUSTERS_TO_BACKUP = "aspiredu-stg"
 
