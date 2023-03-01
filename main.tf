@@ -7,7 +7,12 @@ resource "aws_instance" "cb_backup" {
   tags = {
     Name = local.name_tag,
   }
-  user_data = file("./bin/ec2_setup.sh")
+  user_data = base64encode(templatefile("./bin/ec2_setup.sh", {
+    CRUNCHY_TEAM_ID              = var.CRUNCHY_TEAM_ID
+    CRUNCHY_API_KEY              = var.CRUNCHY_API_KEY
+    ASPIRE_AWS_ACCESS_KEY_ID     = var.ASPIRE_AWS_ACCESS_KEY_ID
+    ASPIRE_AWS_SECRET_ACCESS_KEY = var.ASPIRE_AWS_SECRET_ACCESS_KEY
+  }))
 }
 
 resource "aws_ebs_volume" "volume" {

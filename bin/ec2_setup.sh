@@ -12,6 +12,7 @@ echo "Mounting Attached Volume"
 sudo mount /dev/nvme1n1 /home/ubuntu/data/
 echo "Creating new directories"
 sudo mkdir /home/ubuntu/data/CrunchyBackupsData/
+sudo chmod 777 /home/ubuntu/data/CrunchyBackupsData/
 cd /home/ubuntu/data/CrunchyBackupsData/
 sudo mkdir aspiredu-au aspiredu-ms aspiredu-prd-a aspiredu-prd-b aspiredu-prd-c aspiredu-prd-d aspiredu-prd-e aspiredu-prd-g aspiredu-prd-h aspiredu-prd-i aspiredu-prd-j aspiredu-prd-k aspiredu-prd-l aspiredu-stg aspireprod aspirestaging
 cd /home/ubuntu/
@@ -27,11 +28,11 @@ echo "Installing script dependencies"
 cd /home/ubuntu/crunchy-backups/
 pip3 install -r requirements.txt
 cat << EOF > ./bin/.env
-CRUNCHY_API_KEY = "$CRUNCHY_API_KEY"
-CRUNCHY_TEAM_ID = "$CRUNCHY_TEAM_ID"
+CRUNCHY_API_KEY = "${CRUNCHY_API_KEY}"
+CRUNCHY_TEAM_ID = "${CRUNCHY_TEAM_ID}"
 
-ASPIRE_AWS_ACCESS_KEY_ID = "$ASPIRE_AWS_ACCESS_KEY_ID"
-ASPIRE_AWS_SECRET_ACCESS_KEY = "$ASPIRE_AWS_SECRET_ACCESS_KEY"
+ASPIRE_AWS_ACCESS_KEY_ID = "${ASPIRE_AWS_ACCESS_KEY_ID}"
+ASPIRE_AWS_SECRET_ACCESS_KEY = "${ASPIRE_AWS_SECRET_ACCESS_KEY}"
 
 CLUSTERS_TO_BACKUP = "aspiredu-stg"
 
