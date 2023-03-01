@@ -1,0 +1,25 @@
+name: 'Running Script via Terraform'
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+    
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment: crunchy-backups
+    steps:
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.3.9
+          terraform_wrapper: false
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan -input=false -no-color -out tf.plan
+        env:
+          TF_VAR_CRUNCHY_TEAM_ID: ${{ vars.CRUNCHY_TEAM_ID }}
+          TF_VAR_CRUNCHY_API_KEY: ${{ secrets.CRUNCHY_API_KEY }}
+          TF_VAR_ASPIRE_AWS_ACCESS_KEY_ID: ${{ secrets.ASPIRE_AWS_ACCESS_KEY_ID }}
+          TF_VAR_ASPIRE_AWS_SECRET_ACCESS_KEY: ${{ secrets.ASPIRE_AWS_SECRET_ACCESS_KEY }}
