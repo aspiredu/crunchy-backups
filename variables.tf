@@ -5,4 +5,23 @@ locals {
   region          = "us-east-1"
   volume_size     = 2048
   ebs_device_name = "/dev/nvme1n1"
-} 
+}
+
+variable "CRUNCHY_TEAM_ID" {
+  description = "AspirEDU Team ID to authenticate with the Crunchy Bridge API."
+  type        = string
+}
+variable "CRUNCHY_API_KEY" {
+  description = "API Key to authenticate with the Crunchy Bridge API."
+  type        = string
+}
+
+variable "ASPIRE_AWS_ACCESS_KEY_ID" {
+  description = "Access Key ID to authenticate with AspirEDU's AWS resources."
+  type        = string
+}
+
+variable "ASPIRE_AWS_SECRET_ACCESS_KEY" {
+  description = "Secret Access Key to authenticate with AspirEDU's AWS resources."
+  type        = string
+}
