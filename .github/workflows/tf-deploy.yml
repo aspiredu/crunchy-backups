@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: crunchy-backups
     steps:
-      - name: checkout
+      - name: Checkout Commit
         uses: actions/checkout@v3
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -48,7 +48,7 @@ jobs:
       - name: Terraform Destroy
         id: destroy
         run: |
-          terraform destroy -input=false
+          terraform destroy -auto-approve -input=false
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
