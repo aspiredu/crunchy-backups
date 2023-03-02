@@ -1,8 +1,9 @@
 name: 'Running Script via Terraform'
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: '0 3 1 1 ? 2022' # Temporarily set to day to prevent execution
+    - cron: '0 3 1 1 ? 2022' # Temporarily set to day in past to prevent execution
     # - cron: '0 3 * * *'
     
 jobs:
@@ -24,3 +25,7 @@ jobs:
           TF_VAR_CRUNCHY_API_KEY: ${{ secrets.CRUNCHY_API_KEY }}
           TF_VAR_ASPIRE_AWS_ACCESS_KEY_ID: ${{ secrets.ASPIRE_AWS_ACCESS_KEY_ID }}
           TF_VAR_ASPIRE_AWS_SECRET_ACCESS_KEY: ${{ secrets.ASPIRE_AWS_SECRET_ACCESS_KEY }}
+      - name: Terraform Apply
+        id: apply
+        run: |
+          terraform apply -auto-approve
