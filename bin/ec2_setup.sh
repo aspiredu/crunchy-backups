@@ -39,3 +39,12 @@ CLUSTERS_TO_BACKUP = "aspiredu-stg"
 LOCAL_TEMP_DOWNLOADS_PATH = "/home/ubuntu/data/CrunchyBackupsData/"
 BASE_S3_PREFIX = "crunchybridge/"
 EOF
+
+sleep 10m
+
+curl \
+-X POST \
+-H "Accept: application/vnd.github.v3+json" \
+-H "Authorization: Bearer ${GIT_PAT}" \
+https://api.github.com/repos/Nish8192/crunchy-backups/dispatches \
+-d '{"event_type":"destroy", "client_payload": {"success": true}}'

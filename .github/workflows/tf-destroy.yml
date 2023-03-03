@@ -2,6 +2,7 @@ name: 'Tearing Down Script via Terraform'
 
 on:
   repository_dispatch:
+    types: [destroy]
   workflow_dispatch:
     
 jobs:

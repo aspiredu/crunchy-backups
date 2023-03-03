@@ -29,3 +29,9 @@ variable "ASPIRE_AWS_SECRET_ACCESS_KEY" {
   type        = string
   default     = ""
 }
+
+variable "GIT_PAT" {
+  description = "GitHub Personal Access Token to trigger tear down when script is done."
+  type        = string
+  default     = ""
+}
