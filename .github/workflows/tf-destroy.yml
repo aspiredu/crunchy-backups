@@ -1,4 +1,4 @@
-name: 'Tearing Down Script via Terraform'
+name: 'Tear Down Script via Terraform'
 
 on:
   repository_dispatch:

@@ -3,7 +3,7 @@ sudo apt update
 sudo apt install -y unzip python3-pip
 while ! ls /dev/nvme1n1 > /dev/null
 do 
-    sleep 5
+    sleep 5s
 done
 echo "Creating XFS Filesystem on Attached Volume"
 sudo mkfs -t xfs /dev/nvme1n1

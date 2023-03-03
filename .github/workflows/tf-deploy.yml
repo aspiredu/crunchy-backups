@@ -1,4 +1,4 @@
-name: 'Running Script via Terraform'
+name: 'Start Script via Terraform'
 
 on:
   workflow_dispatch:
