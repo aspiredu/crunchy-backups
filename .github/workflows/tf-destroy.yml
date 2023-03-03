@@ -18,7 +18,7 @@ jobs:
           terraform_wrapper: false
       - name: Terraform Destroy
         id: destroy
-        if: github.event.client_payload.success
+        if: github.event.client_payload.success or github.event_name == 'workflow_dispatch'
         run: |
           terraform destroy -auto-approve -input=false
         env:
