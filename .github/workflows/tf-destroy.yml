@@ -1,0 +1,26 @@
+name: 'Tearing Down Script via Terraform'
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment: crunchy-backups
+    steps:
+      - name: Checkout Commit
+        uses: actions/checkout@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.3.9
+          terraform_wrapper: false
+      - name: Terraform Destroy
+        id: destroy
+        if: github.event.client_payload.success
+        run: |
+          terraform destroy -auto-approve -input=false
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
