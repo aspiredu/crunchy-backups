@@ -43,16 +43,3 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
-
-      # Temporary actions to tear down automatically after 15 minutes
-      - name: Wait 15 Minutes
-        id: wait
-        run: |
-          sleep 15m
-      - name: Terraform Destroy
-        id: destroy
-        run: |
-          terraform destroy -auto-approve -input=false
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
