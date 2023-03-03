@@ -1,3 +1,12 @@
+terraform {
+  backend "s3" {
+    bucket = "aspiredu-terraform-states"
+    key    = "states/terraform.tfstate"
+    region = "us-east-1"
+  }
+}
+
+
 resource "aws_instance" "cb_backup" {
   ami             = local.ami // Ubuntu 22.04 AMI
   instance_type   = local.type
