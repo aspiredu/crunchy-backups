@@ -27,7 +27,7 @@ sudo ./aws/install
 echo "Installing script dependencies"
 cd /home/ubuntu/crunchy-backups/
 pip3 install -r requirements.txt
-cat << EOF > ./bin/.env
+tee ./bin/.env <<EOF
 CRUNCHY_API_KEY = "${CRUNCHY_API_KEY}"
 CRUNCHY_TEAM_ID = "${CRUNCHY_TEAM_ID}"
 
@@ -44,5 +44,5 @@ curl \
 -X POST \
 -H "Accept: application/vnd.github.v3+json" \
 -H "Authorization: Bearer ${GIT_PAT}" \
-https://api.github.com/repos/Nish8192/crunchy-backups/dispatches \
+https://api.github.com/repos/aspiredu/crunchy-backups/dispatches \
 -d '{"event_type":"destroy", "client_payload": {"success": true}}'
