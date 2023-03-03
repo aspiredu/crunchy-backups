@@ -19,6 +19,9 @@ jobs:
       - name: Terraform Init
         id: init
         run: terraform init
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
       - name: Terraform Destroy
         id: destroy
         if: github.event.client_payload.success || github.event_name == 'workflow_dispatch'
