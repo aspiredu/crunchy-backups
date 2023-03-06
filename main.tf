@@ -40,3 +40,8 @@ resource "aws_volume_attachment" "ec2_ebs_att" {
   instance_id  = aws_instance.cb_backup.id
   force_detach = true
 }
+
+output "ASPIRE_BACKEND" {
+  value       = var.ASPIRE_BACKEND
+  description = "The backend the script is being run for."
+}

@@ -35,3 +35,9 @@ variable "GIT_PAT" {
   type        = string
   default     = ""
 }
+
+variable "ASPIRE_BACKEND" {
+  description = "The backend to run the script on."
+  type        = string
+  default     = ""
+}
