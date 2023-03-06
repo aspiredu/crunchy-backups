@@ -1,7 +1,6 @@
 terraform {
   backend "s3" {
     bucket = "aspiredu-terraform-states"
-    key    = "states/terraform.tfstate"
     region = "us-east-1"
   }
 }

@@ -20,7 +20,7 @@ jobs:
           terraform_wrapper: false
       - name: Terraform Init
         id: init
-        run: terraform init
+        run: terraform init -backend-config="key=${{ github.ref_name }}/terraform.tfstate"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
