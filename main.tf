@@ -21,6 +21,7 @@ resource "aws_instance" "cb_backup" {
     ASPIRE_AWS_ACCESS_KEY_ID     = var.ASPIRE_AWS_ACCESS_KEY_ID
     ASPIRE_AWS_SECRET_ACCESS_KEY = var.ASPIRE_AWS_SECRET_ACCESS_KEY
     GIT_PAT                      = var.GIT_PAT
+    ASPIRE_BACKEND               = var.ASPIRE_BACKEND
   }))
 }
 
