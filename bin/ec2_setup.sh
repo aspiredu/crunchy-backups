@@ -45,4 +45,4 @@ curl \
 -H "Accept: application/vnd.github.v3+json" \
 -H "Authorization: Bearer ${GIT_PAT}" \
 https://api.github.com/repos/aspiredu/crunchy-backups/dispatches \
--d '{"event_type": "destroy", "client_payload": {"success": true, "backend": ${ASPIRE_BACKEND}}}'
+-d '{"event_type": "destroy", "client_payload": {"success": true, "backend": "${ASPIRE_BACKEND}"}}'
