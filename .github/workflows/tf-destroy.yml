@@ -13,7 +13,7 @@ jobs:
       - name: Checkout Commit
         uses: actions/checkout@v3
         with:
-          ref: github.event.client_payload.backend || github.ref_name
+          ref: ${{ github.event.client_payload.backend }} || ${{ github.ref_name }}
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
