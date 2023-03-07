@@ -20,8 +20,6 @@ CRUNCHY_TEAM_ID = os.getenv("CRUNCHY_TEAM_ID")
 ASPIRE_AWS_ACCESS_KEY_ID = os.getenv("ASPIRE_AWS_ACCESS_KEY_ID")
 ASPIRE_AWS_SECRET_ACCESS_KEY = os.getenv("ASPIRE_AWS_SECRET_ACCESS_KEY")
 
-CLUSTERS_TO_BACKUP = os.getenv("CLUSTERS_TO_BACKUP").split(",")
-
 LOCAL_TEMP_DOWNLOADS_PATH = os.getenv("LOCAL_TEMP_DOWNLOADS_PATH")
 BASE_S3_PREFIX = os.getenv("BASE_S3_PREFIX")
 
@@ -32,8 +30,12 @@ parser = argparse.ArgumentParser(
     "AspirEDU's S3 Bucket",
 )
 
-parser.add_argument("-t", "--target")
-parser.add_argument("-d", "--delete", action=argparse.BooleanOptionalAction)
+parser.add_argument(
+    "-b", "--backend", required=True, help="The backend to run the script for."
+)
+parser.add_argument(
+    "-t", "--target", help="(Optional) The name of a specific backup to target."
+)
 args = parser.parse_args()
 
 
@@ -134,22 +136,17 @@ def seconds_to_readable(seconds):
     h, m = divmod(m, 60)
     return h, m, s
 
-def summarize(start, download_finish, upload_finish):
-    download_duration = (download_finish - start).total_seconds()
-    upload_duration = (upload_finish - download_finish).total_seconds()
-    down_h, down_m, down_s = seconds_to_readable(download_duration)
-    up_h, up_m, up_s = seconds_to_readable(upload_duration)
-    total_h, total_m, total_s = seconds_to_readable(download_duration + upload_duration)
+
+def summarize(start, finish, download_finishes, upload_finishes):
     print("SUMMARY:")
     print(f"Start: {start}")
-    print(f"Download Finished: {download_finish}")
-    print(f"Upload Finished: {upload_finish}")
-    print(f"Download Duration: {down_h} hrs, {down_m} minutes, {down_s} seconds")
-    print(f"Upload Duration: {up_h} hrs, {up_m} minutes, {up_s} seconds")
+    print(f"Finish: {finish}")
+    total_h, total_m, total_s = seconds_to_readable((finish - start).total_seconds())
     print(f"Total Duration: {total_h} hrs, {total_m} minutes, {total_s} seconds")
 
+
 def main():
-    tz = ZoneInfo('US/Eastern')
+    tz = ZoneInfo("US/Eastern")
     script_start = datetime.utcnow().replace(tzinfo=tz)
     # Establish connection to AspirEDU's S3 Resource
     aspire_s3_resource, aspire_s3_client = get_s3(
@@ -162,7 +159,7 @@ def main():
     # Get Cluster information from CrunchyBridge
     clusters = get_crunchy_clusters()
     for cluster in clusters:
-        if cluster["name"] in CLUSTERS_TO_BACKUP:
+        if cluster["name"] == args.backend:
             download_path = f"{LOCAL_TEMP_DOWNLOADS_PATH}{cluster['name']}"
             backup_info = get_cluster_backup_info(cluster["id"])
 
@@ -244,6 +241,8 @@ def main():
                     for path_suffix in file_path_suffixes
                 ]
             )
+            download_finishes = []
+            upload_finishes = []
 
             for i, command_list in enumerate(command_lists):
                 command = " ".join(command_list)
@@ -258,28 +257,26 @@ def main():
                 )
 
                 watch_process_logs(download_process)
-                print(f"{i + 1} / {len(command_lists)} downloads complete!")
-
-            download_finish = datetime.utcnow().replace(tzinfo=tz)
-
-            upload_all_files_in_dir(
-                download_path,
-                backup_info["stanza"],
-                aspire_bucket,
-                cluster["name"],
-                BASE_S3_PREFIX,
-            )
-
-            upload_finish = datetime.utcnow().replace(tzinfo=tz)
-            if args.delete:
-                delete_all_files_in_dir(download_path)
-            else:
                 print(
-                    f"The 'delete' option was not specified so the backup files will remain "
-                    "in local storage."
+                    f"{i + 1} / {len(command_lists)} downloads complete! Proceeding to upload..."
                 )
-            
-            summarize(script_start, download_finish, upload_finish)
+                download_finishes.append(datetime.utcnow().replace(tzinfo=tz))
+                upload_all_files_in_dir(
+                    download_path,
+                    backup_info["stanza"],
+                    aspire_bucket,
+                    cluster["name"],
+                    BASE_S3_PREFIX,
+                )
+                upload_finishes.append(datetime.utcnow().replace(tzinfo=tz))
+                delete_all_files_in_dir(download_path)
+
+            summarize(
+                script_start,
+                datetime.utcnow().replace(tzinfo=tz),
+                download_finishes,
+                upload_finishes,
+            )
 
 
 if __name__ == "__main__":
