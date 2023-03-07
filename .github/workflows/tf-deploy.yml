@@ -3,13 +3,16 @@ name: 'Start Script via Terraform'
 on:
   workflow_dispatch:
   # schedule:
-    # - cron: '0 3 1 1 ? 2022'
     # - cron: '0 3 * * *'
     
 jobs:
   terraform:
     runs-on: ubuntu-latest
     environment: crunchy-backups
+    strategy:
+      matrix:
+        # backend: [aspiredu-prd-a, aspiredu-prd-b, aspiredu-prd-c, aspiredu-prd-d, aspiredu-prd-e, aspiredu-prd-g, aspiredu-prd-h, aspiredu-prd-i, aspiredu-prd-j, aspiredu-prd-k, aspiredu-prd-l, aspireprod, aspirestaging]
+        backend: [aspirestaging, aspiredu-stg]
     steps:
       - name: Checkout Commit
         uses: actions/checkout@v3
@@ -20,7 +23,7 @@ jobs:
           terraform_wrapper: false
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config="key=${{ github.ref_name }}/terraform.tfstate"
+        run: terraform init -backend-config="key=${{ matrix.backend }}/terraform.tfstate"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
@@ -34,7 +37,7 @@ jobs:
           TF_VAR_ASPIRE_AWS_ACCESS_KEY_ID: ${{ secrets.ASPIRE_AWS_ACCESS_KEY_ID }}
           TF_VAR_ASPIRE_AWS_SECRET_ACCESS_KEY: ${{ secrets.ASPIRE_AWS_SECRET_ACCESS_KEY }}
           TF_VAR_GIT_PAT: ${{ secrets.GIT_PAT }}
-          TF_VAR_ASPIRE_BACKEND: ${{ github.ref_name }}
+          TF_VAR_ASPIRE_BACKEND: ${{ matrix.backend }}
           AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
       - name: Terraform Apply
