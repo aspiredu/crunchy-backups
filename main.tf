@@ -13,7 +13,7 @@ resource "aws_instance" "cb_backup" {
   security_groups = ["ssh-no-http"]
 
   tags = {
-    Name = local.name_tag,
+    Name = "${var.ASPIRE_BACKEND}-pgbackups",
   }
   user_data = base64encode(templatefile("./bin/ec2_setup.sh", {
     CRUNCHY_TEAM_ID              = var.CRUNCHY_TEAM_ID

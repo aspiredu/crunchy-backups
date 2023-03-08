@@ -1,7 +1,6 @@
 locals {
   ami             = "ami-0557a15b87f6559cf" // Ubuntu 22.04 AMI
   type            = "t3.xlarge"
-  name_tag        = "aspire-pgbackups"
   region          = "us-east-1"
   volume_size     = 2048
   ebs_device_name = "/dev/nvme1n1"
