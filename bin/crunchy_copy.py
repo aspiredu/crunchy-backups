@@ -7,8 +7,10 @@ import shutil
 import argparse
 from zoneinfo import ZoneInfo
 from datetime import datetime
+from http import HTTPStatus
 
 from dotenv import load_dotenv
+import sentry_sdk
 
 # boto3.set_stream_logger(name='botocore')
 
@@ -47,6 +49,8 @@ def get_crunchy_clusters():
         f"https://api.crunchybridge.com/clusters?team_id={CRUNCHY_TEAM_ID}",
         headers=headers,
     )
+    if not response.status_code == HTTPStatus.OK:
+        response.raise_for_status()
     return json.loads(response.content.decode("utf-8"))["clusters"]
 
 
@@ -64,6 +68,8 @@ def get_cluster_backup_info(cluster_id):
         headers=headers,
     )
     response = json.loads(backup_tokens.content.decode("utf-8"))
+    if not response.status_code == HTTPStatus.OK:
+        response.raise_for_status()
     backup_info = json.loads(backup_info.content.decode("utf-8"))
     response["backups"] = backup_info["backups"]
     return response
@@ -123,10 +129,10 @@ def delete_all_files_in_dir(source_dir):
     return
 
 
-def backup_exists(s3, bucket, cluster_name, backup_name):
+def backup_exists(s3, bucket, cluster_name, stanza, backup_name):
     if not backup_name.endswith("/"):
         backup_name = backup_name + "/"
-    prefix = f"crunchybridge/{cluster_name}/backup/{backup_name}"
+    prefix = f"crunchybridge/{cluster_name}/backup/{stanza}/{backup_name}"
     resp = s3.list_objects(Bucket=bucket.name, Prefix=prefix, MaxKeys=1)
     return "Contents" in resp
 
@@ -145,7 +151,17 @@ def summarize(start, finish, download_finishes, upload_finishes):
     print(f"Total Duration: {total_h} hrs, {total_m} minutes, {total_s} seconds")
 
 
+sentry_sdk.init(
+    dsn="https://08dc389600224a178ed4b06ac5a6e273@o64497.ingest.sentry.io/4504809320939520",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0,
+)
+print("RUNNING CODE")
+
 def main():
+    x = 1 / 0
     tz = ZoneInfo("US/Eastern")
     script_start = datetime.utcnow().replace(tzinfo=tz)
     # Establish connection to AspirEDU's S3 Resource
@@ -184,7 +200,11 @@ def main():
             if args.target:
                 if args.target in [backup["name"] for backup in backup_info["backups"]]:
                     if not backup_exists(
-                        aspire_s3_client, aspire_bucket, cluster["name"], args.target
+                        aspire_s3_client,
+                        aspire_bucket,
+                        cluster["name"],
+                        backup_info["stanza"],
+                        args.target,
                     ):
                         recursive_path_suffixes.append(
                             f"{crunchy_backup_prefix}/{args.target}"
@@ -203,7 +223,11 @@ def main():
                 has_new_backup = False
                 for backup in backup_info["backups"]:
                     if not backup_exists(
-                        aspire_s3_client, aspire_bucket, cluster["name"], backup["name"]
+                        aspire_s3_client,
+                        aspire_bucket,
+                        cluster["name"],
+                        backup_info["stanza"],
+                        backup["name"],
                     ):
                         has_new_backup = True
                         print(
