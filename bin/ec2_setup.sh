@@ -1,6 +1,6 @@
 #!/bin/bash
 sudo apt update
-sudo apt install -y unzip python3-pip
+sudo apt install -y unzip python3-pip jq
 while ! ls /dev/nvme1n1 > /dev/null
 do 
     sleep 5s
@@ -41,6 +41,9 @@ BASE_S3_PREFIX = "crunchybridge/"
 EOF
 echo "Running script..."
 python3 ./bin/crunchy_copy.py --backend ${ASPIRE_BACKEND}
+echo "Checking in with Dead Man's Snitch"
+snitch_url=$(jq '."${ASPIRE_BACKEND}"' ./bin/env-snitch-map.json)
+curl -d "m=completed" ${snitch_url}
 echo "Sending request to begin infrastructure tear down..."
 curl \
 -X POST \
