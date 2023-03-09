@@ -77,8 +77,10 @@ def get_cluster_backup_info(cluster_id):
         headers=headers,
     )
     response = json.loads(backup_tokens.content.decode("utf-8"))
-    if not response.status_code == HTTPStatus.OK:
-        response.raise_for_status()
+    if not backup_tokens.status_code == HTTPStatus.OK:
+        backup_tokens.raise_for_status()
+    if not backup_info.status_code == HTTPStatus.OK:
+        backup_info.raise_for_status()
     backup_info = json.loads(backup_info.content.decode("utf-8"))
     response["backups"] = backup_info["backups"]
     return response
