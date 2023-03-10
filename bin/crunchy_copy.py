@@ -163,7 +163,6 @@ def summarize(start, finish, download_finishes, upload_finishes):
 
 
 def main():
-    x = 1 / 0
     tz = ZoneInfo("US/Eastern")
     script_start = datetime.utcnow().replace(tzinfo=tz)
     # Establish connection to AspirEDU's S3 Resource
