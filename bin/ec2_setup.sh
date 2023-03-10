@@ -42,8 +42,8 @@ EOF
 echo "Running script..."
 python3 ./bin/crunchy_copy.py --backend ${ASPIRE_BACKEND}
 echo "Checking in with Dead Man's Snitch"
-snitch_url=$(jq '."${ASPIRE_BACKEND}"' ./bin/env-snitch-map.json)
-curl -d "m=completed" ${snitch_url}
+snitch_url=$(jq '."${ASPIRE_BACKEND}"' ./bin/backend-snitch-map.json)
+curl -d "m=completed" $snitch_url
 echo "Sending request to begin infrastructure tear down..."
 curl \
 -X POST \
