@@ -162,12 +162,14 @@ def summarize(start, finish, download_finishes, upload_finishes):
 
 
 def signal_dead_mans_snitch():
+    backend_snitch_map = {}
     with open('backend-snitch-map.json') as json_map:
         backend_snitch_map = json.load(json_map)
-        res = requests.post(
-            backend_snitch_map[ASPIRE_BACKEND], data={"m": "Completed"}
-        )
-        return res
+
+    res = requests.post(
+        backend_snitch_map[ASPIRE_BACKEND], data={"m": "Completed"}
+    )
+    return res
 
 
 def main():
