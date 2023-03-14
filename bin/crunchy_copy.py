@@ -12,8 +12,6 @@ from http import HTTPStatus
 from dotenv import load_dotenv
 import sentry_sdk
 
-# boto3.set_stream_logger(name='botocore')
-
 # ENV Variables
 load_dotenv()
 CRUNCHY_API_KEY = os.getenv("CRUNCHY_API_KEY")
@@ -21,6 +19,7 @@ CRUNCHY_TEAM_ID = os.getenv("CRUNCHY_TEAM_ID")
 
 ASPIRE_AWS_ACCESS_KEY_ID = os.getenv("ASPIRE_AWS_ACCESS_KEY_ID")
 ASPIRE_AWS_SECRET_ACCESS_KEY = os.getenv("ASPIRE_AWS_SECRET_ACCESS_KEY")
+ASPIRE_BACKEND = os.getenv("ASPIRE_BACKEND")
 
 LOCAL_TEMP_DOWNLOADS_PATH = os.getenv("LOCAL_TEMP_DOWNLOADS_PATH")
 BASE_S3_PREFIX = os.getenv("BASE_S3_PREFIX")
@@ -160,6 +159,15 @@ def summarize(start, finish, download_finishes, upload_finishes):
     print(f"Finish: {finish}")
     total_h, total_m, total_s = seconds_to_readable((finish - start).total_seconds())
     print(f"Total Duration: {total_h} hrs, {total_m} minutes, {total_s} seconds")
+
+
+def signal_dead_mans_snitch():
+    with open('backend-snitch-map.json') as json_map:
+        backend_snitch_map = json.load(json_map)
+        res = requests.post(
+            backend_snitch_map[ASPIRE_BACKEND], data={"m": "Completed"}
+        )
+        return res
 
 
 def main():
@@ -302,6 +310,10 @@ def main():
                 download_finishes,
                 upload_finishes,
             )
+
+    # Signal Dead Man's Snitch and terminate
+    signal_dead_mans_snitch()
+    exit(0)
 
 
 if __name__ == "__main__":

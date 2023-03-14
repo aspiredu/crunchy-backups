@@ -35,15 +35,13 @@ CRUNCHY_TEAM_ID = "${CRUNCHY_TEAM_ID}"
 
 ASPIRE_AWS_ACCESS_KEY_ID = "${ASPIRE_AWS_ACCESS_KEY_ID}"
 ASPIRE_AWS_SECRET_ACCESS_KEY = "${ASPIRE_AWS_SECRET_ACCESS_KEY}"
+ASPIRE_BACKEND = "${ASPIRE_BACKEND}"
 
 LOCAL_TEMP_DOWNLOADS_PATH = "/home/ubuntu/data/CrunchyBackupsData/"
 BASE_S3_PREFIX = "crunchybridge/"
 EOF
 echo "Running script..."
 python3 ./bin/crunchy_copy.py --backend ${ASPIRE_BACKEND}
-echo "Checking in with Dead Man's Snitch"
-snitch_url=$(jq '."${ASPIRE_BACKEND}"' ./bin/backend-snitch-map.json)
-curl -d "m=completed" $snitch_url
 echo "Sending request to begin infrastructure tear down..."
 curl \
 -X POST \
