@@ -246,6 +246,7 @@ def main():
                         )
                 if not has_new_backup:
                     print("No new backups found!! Exiting script :)")
+                    signal_dead_mans_snitch()
                     exit(0)
 
             crunchy_s3_path = f's3://{backup_info["aws"]["s3_bucket"]}/{backup_info["cluster_id"]}/{backup_info["stanza"]}'
