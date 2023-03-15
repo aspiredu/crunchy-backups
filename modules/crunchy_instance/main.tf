@@ -1,13 +1,13 @@
 terraform {
-  backend "s3" {
-    bucket = "aspiredu-terraform-states"
-    region = "us-east-1"
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
   }
 }
 
-
 resource "aws_instance" "cb_backup" {
-  ami             = local.ami // Ubuntu 22.04 AMI
+  ami             = var.ami // Ubuntu 22.04 AMI
   instance_type   = local.type
   key_name        = "aspire-pgbackups"
   security_groups = ["ssh-no-http"]
@@ -15,7 +15,7 @@ resource "aws_instance" "cb_backup" {
   tags = {
     Name = "${var.ASPIRE_BACKEND}-pgbackups",
   }
-  user_data = base64encode(templatefile("./bin/ec2_setup.sh", {
+  user_data = base64encode(templatefile("${path.module}/ec2_setup.sh", {
     CRUNCHY_TEAM_ID              = var.CRUNCHY_TEAM_ID
     CRUNCHY_API_KEY              = var.CRUNCHY_API_KEY
     ASPIRE_AWS_ACCESS_KEY_ID     = var.ASPIRE_AWS_ACCESS_KEY_ID

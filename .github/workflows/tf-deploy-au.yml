@@ -9,6 +9,9 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     environment: crunchy-backups
+    defaults:
+      run:
+        working-directory: ./au
     strategy:
       matrix:
         backend: [aspiredu-au]
