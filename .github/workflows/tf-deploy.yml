@@ -14,7 +14,7 @@ jobs:
         working-directory: ./us-east
     strategy:
       matrix:
-        backend: [aspiredu-prd-a, aspiredu-prd-b, aspiredu-prd-c, aspiredu-prd-d, aspiredu-prd-e, aspiredu-prd-g, aspiredu-prd-h, aspiredu-prd-i, aspiredu-prd-j, aspiredu-prd-k, aspiredu-prd-l, aspireprod, aspiredu-ms, aspirestaging]
+        backend: [aspiredu-prd-a, aspiredu-prd-b, aspiredu-prd-c, aspiredu-prd-d, aspiredu-prd-e, aspiredu-prd-g, aspiredu-prd-h, aspiredu-prd-i, aspiredu-prd-j, aspiredu-prd-k, aspiredu-prd-l, aspireprod, aspiredu-ms]
     steps:
       - name: Checkout Commit
         uses: actions/checkout@v3

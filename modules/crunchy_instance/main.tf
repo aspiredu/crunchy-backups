@@ -9,7 +9,7 @@ terraform {
 resource "aws_instance" "cb_backup" {
   ami             = var.ami // Ubuntu 22.04 AMI
   instance_type   = local.type
-  key_name        = "aspire-pgbackups"
+  key_name        = var.key_name
   security_groups = ["ssh-no-http"]
 
   tags = {

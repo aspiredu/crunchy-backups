@@ -8,6 +8,12 @@ variable "ami" {
   default     = ""
 }
 
+variable "key_name" {
+  description = "The Key Pair to use for the EC2 instance."
+  type        = string
+  default     = ""
+}
+
 variable "CRUNCHY_TEAM_ID" {
   description = "AspirEDU Team ID to authenticate with the Crunchy Bridge API."
   type        = string

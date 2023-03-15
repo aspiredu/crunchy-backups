@@ -12,6 +12,7 @@ module "crunchy_instance" {
     aws = aws
   }
   ami                          = "ami-0557a15b87f6559cf" // Ubuntu 22.04 AMI US East
+  key_name                     = "aspire-pgbackups"
   CRUNCHY_TEAM_ID              = var.CRUNCHY_TEAM_ID
   CRUNCHY_API_KEY              = var.CRUNCHY_API_KEY
   ASPIRE_AWS_ACCESS_KEY_ID     = var.ASPIRE_AWS_ACCESS_KEY_ID
