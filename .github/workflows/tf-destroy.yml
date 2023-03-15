@@ -21,7 +21,7 @@ jobs:
         id: init
         if: contains(fromJSON('["aspiredu-au"]'), github.event.client_payload.backend)
         run: terraform init -backend-config="key=${{ github.event.client_payload.backend }}/terraform.tfstate"
-          working-directory: ./au
+        working-directory: ./au
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
@@ -29,7 +29,7 @@ jobs:
         id: destroy
         if: contains(fromJSON('["aspiredu-au"]'), github.event.client_payload.backend)
         run: terraform destroy -auto-approve -input=false
-          working-directory: ./au
+        working-directory: ./au
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
@@ -37,7 +37,7 @@ jobs:
         id: init
         if: contains(fromJSON('["aspiredu-au"]'), github.event.client_payload.backend) == false
         run: terraform init -backend-config="key=${{ github.event.client_payload.backend }}/terraform.tfstate"
-          working-directory: ./us-east
+        working-directory: ./us-east
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
@@ -45,7 +45,7 @@ jobs:
         id: destroy
         if: contains(fromJSON('["aspiredu-au"]'), github.event.client_payload.backend) == false
         run: terraform destroy -auto-approve -input=false
-          working-directory: ./us-east
+        working-directory: ./us-east
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
