@@ -23,15 +23,17 @@ ASPIRE_BACKEND = os.getenv("ASPIRE_BACKEND")
 
 LOCAL_TEMP_DOWNLOADS_PATH = os.getenv("LOCAL_TEMP_DOWNLOADS_PATH")
 BASE_S3_PREFIX = os.getenv("BASE_S3_PREFIX")
+SENTRY_DSN = os.getenv("SENTRY_DSN")
 
-# Set Up Sentry Integration
-sentry_sdk.init(
-    dsn="https://08dc389600224a178ed4b06ac5a6e273@o64497.ingest.sentry.io/4504809320939520",
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production.
-    traces_sample_rate=1.0,
-)
+# Optionally set up Sentry Integration
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        # We recommend adjusting this value in production.
+        traces_sample_rate=1.0,
+    )
 
 # Parse Arguments
 parser = argparse.ArgumentParser(

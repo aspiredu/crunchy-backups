@@ -19,4 +19,5 @@ module "crunchy_instance" {
   ASPIRE_AWS_SECRET_ACCESS_KEY = var.ASPIRE_AWS_SECRET_ACCESS_KEY
   GIT_PAT                      = var.GIT_PAT
   ASPIRE_BACKEND               = var.ASPIRE_BACKEND
+  SENTRY_DSN                   = var.SENTRY_DSN
 }

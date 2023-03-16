@@ -38,3 +38,9 @@ variable "ASPIRE_BACKEND" {
   type        = string
   default     = ""
 }
+
+variable "SENTRY_DSN" {
+  description = "The Sentry DSN token."
+  type        = string
+  default     = ""
+}
