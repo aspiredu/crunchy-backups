@@ -1,16 +1,16 @@
-import boto3
-import requests
+import argparse
 import json
-import subprocess
 import os
 import shutil
-import argparse
-from zoneinfo import ZoneInfo
+import subprocess
 from datetime import datetime
 from http import HTTPStatus
+from zoneinfo import ZoneInfo
 
-from dotenv import load_dotenv
+import boto3
+import requests
 import sentry_sdk
+from dotenv import load_dotenv
 
 # ENV Variables
 load_dotenv()
@@ -36,16 +36,11 @@ sentry_sdk.init(
 # Parse Arguments
 parser = argparse.ArgumentParser(
     prog="CrunchyBridge Backup",
-    description="Moves backups from CrunchyBridge's S3 Buckets to "
-    "AspirEDU's S3 Bucket",
+    description="Moves backups from CrunchyBridge's S3 Buckets to " "AspirEDU's S3 Bucket",
 )
 
-parser.add_argument(
-    "-b", "--backend", required=True, help="The backend to run the script for."
-)
-parser.add_argument(
-    "-t", "--target", help="(Optional) The name of a specific backup to target."
-)
+parser.add_argument("-b", "--backend", required=True, help="The backend to run the script for.")
+parser.add_argument("-t", "--target", help="(Optional) The name of a specific backup to target.")
 args = parser.parse_args()
 
 
@@ -162,7 +157,6 @@ def summarize(start, finish, download_finishes, upload_finishes):
 
 
 def signal_dead_mans_snitch():
-    backend_snitch_map = {}
     with open("./bin/backend-snitch-map.json") as json_map:
         backend_snitch_map = json.load(json_map)
     res = requests.post(backend_snitch_map[ASPIRE_BACKEND], data={"m": "Completed"})
@@ -214,16 +208,14 @@ def main():
                         backup_info["stanza"],
                         args.target,
                     ):
-                        recursive_path_suffixes.append(
-                            f"{crunchy_backup_prefix}/{args.target}"
-                        )
+                        recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{args.target}")
                     else:
-                        print(f"Target backup already exists in AspirEDU S3 Bucket")
+                        print("Target backup already exists in AspirEDU S3 Bucket")
                         exit(0)
                 else:
                     print(
-                        f"Target backup name {args.target} was not found in list of available CrunchyBridge"
-                        f" backups for {cluster['name']}"
+                        f"Target backup name {args.target} was not found in list of available"
+                        f" CrunchyBridge backups for {cluster['name']}"
                     )
                     exit(0)
             else:
@@ -239,17 +231,19 @@ def main():
                     ):
                         has_new_backup = True
                         print(
-                            f"{cluster['name']}: Backup {backup['name']} not found in AspirEDU Bucket... Adding to download list!"
+                            f"{cluster['name']}: Backup {backup['name']} not found in AspirEDU "
+                            f"Bucket... Adding to download list!"
                         )
-                        recursive_path_suffixes.append(
-                            f"{crunchy_backup_prefix}/{backup['name']}"
-                        )
+                        recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{backup['name']}")
                 if not has_new_backup:
                     print("No new backups found!! Exiting script :)")
                     signal_dead_mans_snitch()
                     exit(0)
 
-            crunchy_s3_path = f's3://{backup_info["aws"]["s3_bucket"]}/{backup_info["cluster_id"]}/{backup_info["stanza"]}'
+            crunchy_s3_path = (
+                f's3://{backup_info["aws"]["s3_bucket"]}/'
+                f'{backup_info["cluster_id"]}/{backup_info["stanza"]}'
+            )
 
             command_lists = [
                 [
@@ -290,9 +284,7 @@ def main():
                 )
 
                 watch_process_logs(download_process)
-                print(
-                    f"{i + 1} / {len(command_lists)} downloads complete! Proceeding to upload..."
-                )
+                print(f"{i + 1} / {len(command_lists)} downloads complete! Proceeding to upload...")
                 download_finishes.append(datetime.utcnow().replace(tzinfo=tz))
                 upload_all_files_in_dir(
                     download_path,
