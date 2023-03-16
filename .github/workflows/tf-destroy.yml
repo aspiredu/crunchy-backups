@@ -4,7 +4,7 @@ on:
   repository_dispatch:
     types: [destroy]
   workflow_dispatch:
-    
+
 jobs:
   terraform:
     runs-on: ubuntu-latest

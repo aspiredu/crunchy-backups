@@ -1,47 +1,57 @@
 #!/bin/bash
-sudo apt update
-sudo apt install -y unzip python3-pip jq
+apt update
+apt install -y unzip python3-pip jq
+
+LOCAL_TEMP_DOWNLOADS_PATH="${HOME}/data/CrunchyBackupsData/"
+
 while ! ls /dev/nvme1n1 > /dev/null
-do 
+do
+    echo "Waiting for attached volume to be available..."
     sleep 5s
 done
 echo "Creating XFS Filesystem on Attached Volume"
-sudo mkfs -t xfs /dev/nvme1n1
-sudo mkdir /home/ubuntu/data/
-echo "Mounting Attached Volume"
-sudo mount /dev/nvme1n1 /home/ubuntu/data/
+mkfs -t xfs /dev/nvme1n1
+
 echo "Creating new directories"
-sudo mkdir /home/ubuntu/data/CrunchyBackupsData/
-sudo chmod 777 /home/ubuntu/data/CrunchyBackupsData/
-cd /home/ubuntu/data/CrunchyBackupsData/
-sudo mkdir ${ASPIRE_BACKEND}
-sudo chmod 777 ./*
-cd /home/ubuntu/
-echo "Cloning GitHub repository"
-git clone https://github.com/aspiredu/crunchy-backups.git
+mkdir -p "${LOCAL_TEMP_DOWNLOADS_PATH}${ASPIRE_BACKEND}"
+chmod -R 760 ${LOCAL_TEMP_DOWNLOADS_PATH}
+
+echo "Mounting Attached Volume"
+mount /dev/nvme1n1 "${HOME}/data/"
+
 echo "Installing AWS CLI"
-sudo mkdir installations
-cd installations
+mkdir "${HOME}/installations"
+cd "${HOME}/installations"
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
-sudo ./aws/install
+./aws/install
+
+echo "Cloning GitHub repository"
+cd $HOME
+git clone https://github.com/aspiredu/crunchy-backups.git
+
 echo "Installing script dependencies"
-cd /home/ubuntu/crunchy-backups/
+cd "${HOME}/crunchy-backups/"
 pip3 install -r requirements.txt
-pip3 install python-dotenv
+
+echo "Creating .env file"
 tee ./bin/.env <<EOF
 CRUNCHY_API_KEY = "${CRUNCHY_API_KEY}"
 CRUNCHY_TEAM_ID = "${CRUNCHY_TEAM_ID}"
+
+SENTRY_DSN = "${SENTRY_DSN}"
 
 ASPIRE_AWS_ACCESS_KEY_ID = "${ASPIRE_AWS_ACCESS_KEY_ID}"
 ASPIRE_AWS_SECRET_ACCESS_KEY = "${ASPIRE_AWS_SECRET_ACCESS_KEY}"
 ASPIRE_BACKEND = "${ASPIRE_BACKEND}"
 
-LOCAL_TEMP_DOWNLOADS_PATH = "/home/ubuntu/data/CrunchyBackupsData/"
+LOCAL_TEMP_DOWNLOADS_PATH = "{LOCAL_TEMP_DOWNLOADS_PATH}"
 BASE_S3_PREFIX = "crunchybridge/"
 EOF
+
 echo "Running script..."
 python3 ./bin/crunchy_copy.py --backend ${ASPIRE_BACKEND}
+
 echo "Sending request to begin infrastructure tear down..."
 curl \
 -X POST \

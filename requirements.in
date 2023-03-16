@@ -1,0 +1,6 @@
+boto3
+python-dateutil
+python-dotenv
+requests
+sentry-sdk
+pip-tools

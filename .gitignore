@@ -2,6 +2,11 @@
 tmp
 .env
 
+# Ignore python files
+*.pyc
+# Ignore virtualenv
+venv/
+
 ### Terraform ###
 # Local .terraform directories
 **/.terraform/*
