@@ -15,7 +15,7 @@ resource "aws_instance" "cb_backup" {
   tags = {
     Name = "${var.ASPIRE_BACKEND}-pgbackups",
   }
-  user_data = base64encode(templatefile("${path.module}/ec2_setup.sh", {
+  user_data = base64encode(templatefile("${path.module}/ec2_setup.tftpl", {
     CRUNCHY_TEAM_ID              = var.CRUNCHY_TEAM_ID
     CRUNCHY_API_KEY              = var.CRUNCHY_API_KEY
     ASPIRE_AWS_ACCESS_KEY_ID     = var.ASPIRE_AWS_ACCESS_KEY_ID
