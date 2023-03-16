@@ -45,6 +45,8 @@ parser.add_argument("-b", "--backend", required=True, help="The backend to run t
 parser.add_argument("-t", "--target", help="(Optional) The name of a specific backup to target.")
 args = parser.parse_args()
 
+STAGING_BACKENDS = ["aspirestaging", "aspiredu-stg"]
+
 
 def get_crunchy_clusters():
     headers = {
@@ -159,10 +161,13 @@ def summarize(start, finish, download_finishes, upload_finishes):
 
 
 def signal_dead_mans_snitch():
-    with open("./bin/backend-snitch-map.json") as json_map:
-        backend_snitch_map = json.load(json_map)
-    res = requests.post(backend_snitch_map[ASPIRE_BACKEND], data={"m": "Completed"})
-    return res
+    if not ASPIRE_BACKEND in STAGING_BACKENDS:
+        with open("./bin/backend-snitch-map.json") as json_map:
+            backend_snitch_map = json.load(json_map)
+        res = requests.post(backend_snitch_map[ASPIRE_BACKEND], data={"m": "Completed"})
+        return res
+    else:
+        return
 
 
 def main():
@@ -213,12 +218,14 @@ def main():
                         recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{args.target}")
                     else:
                         print("Target backup already exists in AspirEDU S3 Bucket")
+                        signal_dead_mans_snitch()
                         exit(0)
                 else:
                     print(
                         f"Target backup name {args.target} was not found in list of available"
                         f" CrunchyBridge backups for {cluster['name']}"
                     )
+                    signal_dead_mans_snitch()
                     exit(0)
             else:
                 # Determine if there are any new CrunchyBridge backups to move
