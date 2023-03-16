@@ -19,7 +19,6 @@ CRUNCHY_TEAM_ID = os.getenv("CRUNCHY_TEAM_ID")
 
 ASPIRE_AWS_ACCESS_KEY_ID = os.getenv("ASPIRE_AWS_ACCESS_KEY_ID")
 ASPIRE_AWS_SECRET_ACCESS_KEY = os.getenv("ASPIRE_AWS_SECRET_ACCESS_KEY")
-ASPIRE_BACKEND = os.getenv("ASPIRE_BACKEND")
 
 LOCAL_TEMP_DOWNLOADS_PATH = os.getenv("LOCAL_TEMP_DOWNLOADS_PATH")
 BASE_S3_PREFIX = os.getenv("BASE_S3_PREFIX")
@@ -46,6 +45,7 @@ parser.add_argument("-t", "--target", help="(Optional) The name of a specific ba
 args = parser.parse_args()
 
 STAGING_BACKENDS = ["aspirestaging", "aspiredu-stg"]
+AU_BACKENDS = ["aspiredu-au"]
 
 
 def get_crunchy_clusters():
@@ -161,10 +161,10 @@ def summarize(start, finish, download_finishes, upload_finishes):
 
 
 def signal_dead_mans_snitch():
-    if not ASPIRE_BACKEND in STAGING_BACKENDS:
+    if not args.backend in STAGING_BACKENDS:
         with open("./bin/backend-snitch-map.json") as json_map:
             backend_snitch_map = json.load(json_map)
-        res = requests.post(backend_snitch_map[ASPIRE_BACKEND], data={"m": "Completed"})
+        res = requests.post(backend_snitch_map[args.backend], data={"m": "Completed"})
         return res
     else:
         return
@@ -179,7 +179,11 @@ def main():
     )
 
     # Connect to AspirEDU backup Bucket
-    aspire_bucket = aspire_s3_resource.Bucket("aspiredu-pgbackups")
+    aspire_bucket = (
+        aspire_s3_resource.Bucket("aspiredu-pgbackups")
+        if args.backend not in AU_BACKENDS
+        else aspire_s3_resource.Bucket("aspiredu-pgbackups-au")
+    )
 
     # Get Cluster information from CrunchyBridge
     clusters = get_crunchy_clusters()
