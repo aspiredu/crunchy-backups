@@ -2,8 +2,8 @@ name: 'Start Script via Terraform for AU'
 
 on:
   workflow_dispatch:
-  # schedule:
-    # - cron: '0 3 * * *'
+  schedule:
+    - cron: '0 7 * * *' # Everyday at 07:00 UTC (03:00 Eastern)
 
 jobs:
   terraform:
