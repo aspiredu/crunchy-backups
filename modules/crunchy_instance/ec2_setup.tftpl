@@ -52,10 +52,10 @@ EOF
 echo "Running script..."
 python3 ./bin/crunchy_copy.py --backend ${ASPIRE_BACKEND}
 
-# echo "Sending request to begin infrastructure tear down..."
-# curl \
-# -X POST \
-# -H "Accept: application/vnd.github.v3+json" \
-# -H "Authorization: Bearer ${GIT_PAT}" \
-# https://api.github.com/repos/aspiredu/crunchy-backups/dispatches \
-# -d '{"event_type": "destroy", "client_payload": {"success": true, "backend": "${ASPIRE_BACKEND}"}}'
+echo "Sending request to begin infrastructure tear down..."
+curl \
+-X POST \
+-H "Accept: application/vnd.github.v3+json" \
+-H "Authorization: Bearer ${GIT_PAT}" \
+https://api.github.com/repos/aspiredu/crunchy-backups/dispatches \
+-d '{"event_type": "destroy", "client_payload": {"success": true, "backend": "${ASPIRE_BACKEND}"}}'
