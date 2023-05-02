@@ -31,6 +31,7 @@ runs:
       id: init
       run: terraform init -backend-config="key=${{ inputs.backend }}/terraform.tfstate"
       shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
       env:
         AWS_ACCESS_KEY_ID: ${{ inputs.TERRAFORM_AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
@@ -39,6 +40,7 @@ runs:
       run: |
         terraform plan -input=false -no-color -out tf.plan
       shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
       env:
         TF_VAR_CRUNCHY_TEAM_ID: ${{ inputs.CRUNCHY_TEAM_ID }}
         TF_VAR_CRUNCHY_API_KEY: ${{ inputs.CRUNCHY_API_KEY }}
@@ -54,6 +56,7 @@ runs:
       run: |
         terraform apply -auto-approve -input=false tf.plan
       shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
       env:
         AWS_ACCESS_KEY_ID: ${{ inputs.TERRAFORM_AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.TERRAFORM_AWS_SECRET_ACCESS_KEY }}

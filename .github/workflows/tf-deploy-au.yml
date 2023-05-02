@@ -30,3 +30,4 @@ jobs:
           GIT_PAT: ${{ secrets.GIT_PAT }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           backend: ${{ matrix.backend }}
+          WORKING_DIR: ./au
