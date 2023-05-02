@@ -1,0 +1,56 @@
+name: "Terraform Crunchy Bridge Backup Script"
+description: "Uses Terraform to deploy and tear down the Crunchy Bridge Backup Script"
+inputs:
+  TERRAFORM_AWS_ACCESS_KEY_ID:
+    required: true
+  TERRAFORM_AWS_SECRET_ACCESS_KEY:
+    required: true
+  CRUNCHY_TEAM_ID:
+    required: true
+  CRUNCHY_API_KEY:
+    required: true
+  ASPIRE_AWS_ACCESS_KEY_ID:
+    required: true
+  ASPIRE_AWS_SECRET_ACCESS_KEY:
+    required: true
+  GIT_PAT:
+    required: true
+  SENTRY_DSN:
+    required: true
+  backend:
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.3.9
+        terraform_wrapper: false
+    - name: Terraform Init
+      id: init
+      run: terraform init -backend-config="key=${{ inputs.backend }}/terraform.tfstate"
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.TERRAFORM_AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
+    - name: Terraform Plan
+      id: plan
+      run: |
+        terraform plan -input=false -no-color -out tf.plan
+      env:
+        TF_VAR_CRUNCHY_TEAM_ID: ${{ inputs.CRUNCHY_TEAM_ID }}
+        TF_VAR_CRUNCHY_API_KEY: ${{ inputs.CRUNCHY_API_KEY }}
+        TF_VAR_ASPIRE_AWS_ACCESS_KEY_ID: ${{ inputs.ASPIRE_AWS_ACCESS_KEY_ID }}
+        TF_VAR_ASPIRE_AWS_SECRET_ACCESS_KEY: ${{ inputs.ASPIRE_AWS_SECRET_ACCESS_KEY }}
+        TF_VAR_GIT_PAT: ${{ inputs.GIT_PAT }}
+        TF_VAR_ASPIRE_BACKEND: ${{ inputs.backend }}
+        TF_VAR_SENTRY_DSN: ${{ inputs.SENTRY_DSN }}
+        AWS_ACCESS_KEY_ID: ${{ inputs.TERRAFORM_AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
+    - name: Terraform Apply
+      id: apply
+      run: |
+        terraform apply -auto-approve -input=false tf.plan
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.TERRAFORM_AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.TERRAFORM_AWS_SECRET_ACCESS_KEY }}

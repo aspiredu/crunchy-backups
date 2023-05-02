@@ -18,35 +18,15 @@ jobs:
     steps:
       - name: Checkout Commit
         uses: actions/checkout@v3
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+      - name: Deploy With Terraform
+        uses: ./.github/actions/tf-deploy-composite
         with:
-          terraform_version: 1.3.9
-          terraform_wrapper: false
-      - name: Terraform Init
-        id: init
-        run: terraform init -backend-config="key=${{ matrix.backend }}/terraform.tfstate"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
-      - name: Terraform Plan
-        id: plan
-        run: |
-          terraform plan -input=false -no-color -out tf.plan
-        env:
-          TF_VAR_CRUNCHY_TEAM_ID: ${{ vars.CRUNCHY_TEAM_ID }}
-          TF_VAR_CRUNCHY_API_KEY: ${{ secrets.CRUNCHY_API_KEY }}
-          TF_VAR_ASPIRE_AWS_ACCESS_KEY_ID: ${{ secrets.ASPIRE_AWS_ACCESS_KEY_ID }}
-          TF_VAR_ASPIRE_AWS_SECRET_ACCESS_KEY: ${{ secrets.ASPIRE_AWS_SECRET_ACCESS_KEY }}
-          TF_VAR_GIT_PAT: ${{ secrets.GIT_PAT }}
-          TF_VAR_ASPIRE_BACKEND: ${{ matrix.backend }}
-          TF_VAR_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
-      - name: Terraform Apply
-        id: apply
-        run: |
-          terraform apply -auto-approve -input=false tf.plan
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
+          TERRAFORM_AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
+          TERRAFORM_AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
+          CRUNCHY_TEAM_ID: ${{ vars.CRUNCHY_TEAM_ID }}
+          CRUNCHY_API_KEY: ${{ secrets.CRUNCHY_API_KEY }}
+          ASPIRE_AWS_ACCESS_KEY_ID: ${{ secrets.ASPIRE_AWS_ACCESS_KEY_ID }}
+          ASPIRE_AWS_SECRET_ACCESS_KEY: ${{ secrets.ASPIRE_AWS_SECRET_ACCESS_KEY }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          backend: ${{ matrix.backend }}

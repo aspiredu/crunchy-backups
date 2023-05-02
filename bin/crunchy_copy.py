@@ -161,6 +161,7 @@ def summarize(start, finish, download_finishes, upload_finishes):
 
 
 def signal_dead_mans_snitch():
+    print("Signaling Dead Man's Snitch...")
     if not args.backend in STAGING_BACKENDS:
         with open("./bin/backend-snitch-map.json") as json_map:
             backend_snitch_map = json.load(json_map)
