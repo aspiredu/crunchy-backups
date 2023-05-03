@@ -19,7 +19,41 @@ jobs:
       - name: Checkout Commit
         uses: actions/checkout@v3
       - name: Deploy With Terraform
+        id: deployAttempt1
         uses: ./.github/actions/tf-deploy-composite
+        continue_on_error: true
+        with:
+          TERRAFORM_AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
+          TERRAFORM_AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
+          CRUNCHY_TEAM_ID: ${{ vars.CRUNCHY_TEAM_ID }}
+          CRUNCHY_API_KEY: ${{ secrets.CRUNCHY_API_KEY }}
+          ASPIRE_AWS_ACCESS_KEY_ID: ${{ secrets.ASPIRE_AWS_ACCESS_KEY_ID }}
+          ASPIRE_AWS_SECRET_ACCESS_KEY: ${{ secrets.ASPIRE_AWS_SECRET_ACCESS_KEY }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          backend: ${{ matrix.backend }}
+          WORKING_DIR: ./au
+      - name: Deploy With Terraform Attempt 2
+        id: deployAttempt2
+        uses: ./.github/actions/tf-deploy-composite
+        if: steps.deployAttempt1.outcome == 'failure'
+        continue_on_error: true
+        with:
+          TERRAFORM_AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
+          TERRAFORM_AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
+          CRUNCHY_TEAM_ID: ${{ vars.CRUNCHY_TEAM_ID }}
+          CRUNCHY_API_KEY: ${{ secrets.CRUNCHY_API_KEY }}
+          ASPIRE_AWS_ACCESS_KEY_ID: ${{ secrets.ASPIRE_AWS_ACCESS_KEY_ID }}
+          ASPIRE_AWS_SECRET_ACCESS_KEY: ${{ secrets.ASPIRE_AWS_SECRET_ACCESS_KEY }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          backend: ${{ matrix.backend }}
+          WORKING_DIR: ./au
+      - name: Deploy With Terraform Attempt 3
+        id: deployAttempt3
+        uses: ./.github/actions/tf-deploy-composite
+        if: steps.deployAttempt1.outcome == 'failure' && steps.deployAttempt2.outcome == 'failure'
+        continue_on_error: true
         with:
           TERRAFORM_AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
           TERRAFORM_AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}

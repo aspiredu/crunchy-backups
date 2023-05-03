@@ -19,6 +19,8 @@ inputs:
     required: true
   backend:
     required: true
+  WORKING_DIR:
+    required: true
 runs:
   using: "composite"
   steps:
