@@ -54,7 +54,7 @@ python3 ./bin/crunchy_copy.py --backend ${ASPIRE_BACKEND}
 COUNTER=1
 while true
 do
-    echo "Sending request to begin infrastructure tear down... Attempt #${COUNTER}..."
+    echo "Sending request to begin infrastructure tear down... Attempt #$COUNTER..."
     curl \
     -X POST \
     -H "Accept: application/vnd.github.v3+json" \
