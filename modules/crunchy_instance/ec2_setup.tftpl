@@ -49,7 +49,7 @@ BASE_S3_PREFIX = "crunchybridge/"
 EOF
 
 echo "Running script..."
-python3 ./bin/crunchy_copy.py --backend ${ASPIRE_BACKEND}
+python3 ./src/crunchy_copy.py --backend ${ASPIRE_BACKEND}
 
 COUNTER=1
 while true

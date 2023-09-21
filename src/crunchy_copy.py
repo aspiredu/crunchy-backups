@@ -7,10 +7,11 @@ from datetime import datetime
 from http import HTTPStatus
 from zoneinfo import ZoneInfo
 
-import boto3
 import requests
 import sentry_sdk
 from dotenv import load_dotenv
+
+from src.s3 import get_s3
 
 # ENV Variables
 load_dotenv()
@@ -84,15 +85,6 @@ def get_cluster_backup_info(cluster_id):
     return response
 
 
-def get_s3(access_key_id, secret_access_key, session_token=None):
-    session = boto3.session.Session(
-        aws_access_key_id=access_key_id,
-        aws_secret_access_key=secret_access_key,
-        aws_session_token=session_token,
-    )
-    return session.resource("s3"), session.client("s3")
-
-
 def watch_process_logs(process):
     while True:
         output = process.stdout.readline()
@@ -162,8 +154,8 @@ def summarize(start, finish, download_finishes, upload_finishes):
 
 def signal_dead_mans_snitch():
     print("Signaling Dead Man's Snitch...")
-    if not args.backend in STAGING_BACKENDS:
-        with open("./bin/backend-snitch-map.json") as json_map:
+    if args.backend not in STAGING_BACKENDS:
+        with open("./src/backend-snitch-map.json") as json_map:
             backend_snitch_map = json.load(json_map)
         res = requests.post(backend_snitch_map[args.backend], data={"m": "Completed"})
         return res
