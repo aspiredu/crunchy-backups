@@ -15,6 +15,10 @@ jobs:
     strategy:
       matrix:
         backend: [aspiredu-prd-a, aspiredu-prd-b, aspiredu-prd-c, aspiredu-prd-d, aspiredu-prd-e, aspiredu-prd-g, aspiredu-prd-h, aspiredu-prd-i, aspiredu-prd-j, aspiredu-prd-k, aspiredu-prd-l, aspireprod, aspiredu-ms]
+        working_dir: ["./us-east"]
+        include:
+          - backend: "aspiredu-au"
+            working_dir: "./au"
     steps:
       - name: Get current weekday
         id: weekday
@@ -40,7 +44,7 @@ jobs:
           GIT_PAT: ${{ secrets.GIT_PAT }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           backend: ${{ matrix.backend }}
-          WORKING_DIR: ./us-east
+          WORKING_DIR: ${{ matrix.working_dir }}
       - name: Deploy With Terraform Attempt 2
         id: deployAttempt2
         uses: ./.github/actions/tf-deploy-composite
@@ -56,7 +60,7 @@ jobs:
           GIT_PAT: ${{ secrets.GIT_PAT }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           backend: ${{ matrix.backend }}
-          WORKING_DIR: ./us-east
+          WORKING_DIR: ${{ matrix.working_dir }}
       - name: Deploy With Terraform Attempt 3
         id: deployAttempt3
         uses: ./.github/actions/tf-deploy-composite
@@ -72,4 +76,4 @@ jobs:
           GIT_PAT: ${{ secrets.GIT_PAT }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           backend: ${{ matrix.backend }}
-          WORKING_DIR: ./us-east
+          WORKING_DIR: ${{ matrix.working_dir }}
