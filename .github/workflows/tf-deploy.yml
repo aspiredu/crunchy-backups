@@ -3,7 +3,7 @@ name: 'Start Script via Terraform'
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 7 * * *' # Everyday at 07:00 UTC (03:00 Eastern)
+    - cron: '0 7 1-7 * *' # Each of the first seven days of every month at 07:00 UTC (03:00 Eastern)
 
 jobs:
   terraform:
@@ -16,9 +16,17 @@ jobs:
       matrix:
         backend: [aspiredu-prd-a, aspiredu-prd-b, aspiredu-prd-c, aspiredu-prd-d, aspiredu-prd-e, aspiredu-prd-g, aspiredu-prd-h, aspiredu-prd-i, aspiredu-prd-j, aspiredu-prd-k, aspiredu-prd-l, aspireprod, aspiredu-ms]
     steps:
+      - name: Get current weekday
+        id: weekday
+        run: echo "::set-output name=date::$(date '+%A')"
+      - name: Check weekday
+        if: ${{ steps.weekday.outputs.date }} != 'Saturday'
+        run: echo "This job will be skipped because it's not Saturday."
       - name: Checkout Commit
+        if: ${{ steps.weekday.outputs.date }} == 'Saturday'
         uses: actions/checkout@v3
       - name: Deploy With Terraform
+        if: ${{ steps.weekday.outputs.date }} == 'Saturday'
         id: deployAttempt1
         uses: ./.github/actions/tf-deploy-composite
         continue-on-error: true
@@ -36,7 +44,7 @@ jobs:
       - name: Deploy With Terraform Attempt 2
         id: deployAttempt2
         uses: ./.github/actions/tf-deploy-composite
-        if: steps.deployAttempt1.outcome == 'failure'
+        if: ${{ steps.weekday.outputs.date }} == 'Saturday' && steps.deployAttempt1.outcome == 'failure'
         continue-on-error: true
         with:
           TERRAFORM_AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
@@ -52,7 +60,7 @@ jobs:
       - name: Deploy With Terraform Attempt 3
         id: deployAttempt3
         uses: ./.github/actions/tf-deploy-composite
-        if: steps.deployAttempt1.outcome == 'failure' && steps.deployAttempt2.outcome == 'failure'
+        if: ${{ steps.weekday.outputs.date }} == 'Saturday' && steps.deployAttempt1.outcome == 'failure' && steps.deployAttempt2.outcome == 'failure'
         continue-on-error: true
         with:
           TERRAFORM_AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
@@ -65,4 +73,3 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           backend: ${{ matrix.backend }}
           WORKING_DIR: ./us-east
-
