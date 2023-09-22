@@ -59,6 +59,7 @@ def first_saturdays_of_month_year1_to_year3() -> set[date]:
 
 def meets_retention_policy(value: date):
     today = date.today()
+    # We want to keep every backup for the first two weeks.
     if (today - timedelta(weeks=2)) < value <= today:
         return True
     if is_saturday(value):
