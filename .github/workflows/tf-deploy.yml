@@ -18,15 +18,15 @@ jobs:
     steps:
       - name: Get current weekday
         id: weekday
-        run: echo "::set-output name=date::$(date '+%A')"
+        run: echo "{name}=$(date '+%A')" >> $GITHUB_OUTPUT
       - name: Check weekday
-        if: ${{ steps.weekday.outputs.date }} != 'Saturday'
+        if: ${{ steps.weekday.outputs.date != 'Saturday' }}
         run: echo "This job will be skipped because it's not Saturday."
       - name: Checkout Commit
-        if: ${{ steps.weekday.outputs.date }} == 'Saturday'
+        if: ${{ steps.weekday.outputs.date == 'Saturday' }}
         uses: actions/checkout@v3
       - name: Deploy With Terraform
-        if: ${{ steps.weekday.outputs.date }} == 'Saturday'
+        if: ${{ steps.weekday.outputs.date == 'Saturday' }}
         id: deployAttempt1
         uses: ./.github/actions/tf-deploy-composite
         continue-on-error: true
@@ -44,7 +44,7 @@ jobs:
       - name: Deploy With Terraform Attempt 2
         id: deployAttempt2
         uses: ./.github/actions/tf-deploy-composite
-        if: ${{ steps.weekday.outputs.date }} == 'Saturday' && steps.deployAttempt1.outcome == 'failure'
+        if: ${{ steps.weekday.outputs.date == 'Saturday' && steps.deployAttempt1.outcome == 'failure' }}
         continue-on-error: true
         with:
           TERRAFORM_AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
@@ -60,7 +60,7 @@ jobs:
       - name: Deploy With Terraform Attempt 3
         id: deployAttempt3
         uses: ./.github/actions/tf-deploy-composite
-        if: ${{ steps.weekday.outputs.date }} == 'Saturday' && steps.deployAttempt1.outcome == 'failure' && steps.deployAttempt2.outcome == 'failure'
+        if: ${{ steps.weekday.outputs.date == 'Saturday' && steps.deployAttempt1.outcome == 'failure' && steps.deployAttempt2.outcome == 'failure' }}
         continue-on-error: true
         with:
           TERRAFORM_AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
