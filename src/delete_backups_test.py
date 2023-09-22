@@ -42,7 +42,7 @@ def test_meets_retention_policy():
     retain_dates = list(
         sorted((d for d in get_test_dates() if meets_retention_policy(d)), reverse=True)
     )
-    # Do some quick checks on teh first 64 dates since they are easy
+    # Do some quick checks on the first 64 dates since they are easy
     # to guess the next date. The first saturday of each month is
     # less easy write a loop for.
     for i in range(14):
