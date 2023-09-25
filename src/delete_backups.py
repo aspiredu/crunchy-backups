@@ -6,7 +6,7 @@ import argparse
 import os
 import re
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from functools import lru_cache
 from itertools import chain
 
@@ -31,43 +31,22 @@ class TooManyDirectoriesForDeletion(Exception):
     pass
 
 
-def is_saturday(value: date) -> bool:
-    """Determine if date is a Saturday"""
-    return value.weekday() == 5
-
-
 @lru_cache(maxsize=None)
-def saturdays_for_the_past_year() -> set[date]:
-    """Find all Saturdays between from today to 1 year ago"""
-    start = date.today()
-    cut_off = start - relativedelta(years=1)
-    return set(
-        d.date() for d in rrule.rrule(rrule.WEEKLY, byweekday=SA(1), dtstart=cut_off, until=start)
+def saturdays_for_the_past_three_years(value: date) -> set[date]:
+    """Find all Saturdays between from value to 3 years ago"""
+    cut_off = value - relativedelta(years=3)
+    saturday_ruleset = rrule.rruleset()
+    saturday_ruleset.rrule(
+        rrule.rrule(rrule.MONTHLY, byweekday=SA(1), dtstart=cut_off, until=value)
     )
-
-
-@lru_cache(maxsize=None)
-def first_saturdays_of_month_year1_to_year3() -> set[date]:
-    """Find first Saturday of each month between from 1 year to 3 years"""
-    today = date.today()
-    start = today - relativedelta(years=1)
-    cut_off = today - relativedelta(years=3)
-    return set(
-        d.date() for d in rrule.rrule(rrule.MONTHLY, byweekday=SA(1), dtstart=cut_off, until=start)
+    saturday_ruleset.rrule(
+        rrule.rrule(rrule.MONTHLY, byweekday=SA(3), dtstart=cut_off, until=value)
     )
+    return {d.date() for d in saturday_ruleset}
 
 
 def meets_retention_policy(value: date):
-    today = date.today()
-    # We want to keep every backup for the first two weeks.
-    if (today - timedelta(weeks=2)) < value <= today:
-        return True
-    if is_saturday(value):
-        if value in saturdays_for_the_past_year():
-            return True
-        if value in first_saturdays_of_month_year1_to_year3():
-            return True
-    return False
+    return value in saturdays_for_the_past_three_years(date.today())
 
 
 def delete_files(s3, bucket, prefix: str):
@@ -94,18 +73,20 @@ def backup_directories(s3, bucket, cluster=None):
     └─ crunchybridge/
        ├─ aspireprod/
        └─ cluster/
-          ├─ random_chars_for_folders/
-          │  ├─ backup.history/
-          │  ├─ backup.info
-          │  ├─ backup.info.copy
-          │  └─ 20230201-010000F/
-          └─ more_random_char/
-             ├─ backup.history/
-             ├─ backup.info
-             ├─ backup.info.copy
-             ├─ 20230103-010000F/
-             ├─ 20230102-010000F/
-             └─ 20230101-010000F/
+          ├─ archive # This is the WAL that is stored while the backup is created
+          └─ backup # This is the physical backup created each day
+             ├─ random_chars_for_folders/
+             │  ├─ backup.history/
+             │  ├─ backup.info
+             │  ├─ backup.info.copy
+             │  └─ 20230201-010000F/
+             └─ more_random_char/
+                ├─ backup.history/
+                ├─ backup.info
+                ├─ backup.info.copy
+                ├─ 20230103-010000F/
+                ├─ 20230102-010000F/
+                └─ 20230101-010000F/
 
     We are looking to get:
     - 20230201-010000F
@@ -114,7 +95,8 @@ def backup_directories(s3, bucket, cluster=None):
     - 20230101-010000F
 
     :param s3: The s3 client resource.
-    :param bucket: The s3 Bucket instance
+    :param bucket: The s3 Bucket instance.
+    :param cluster: The database cluster name.
     :return list[str]: The collection of folder names that are used for daily backups.
     """
     cluster_prefixes = [
@@ -199,7 +181,9 @@ def main():
         "--clean-up",
         dest="clean_up",
         action="store_true",
-        help="(Optional) Remove more than just the expected day's expired data. If more than 3 backups are found this will cause an exception to be raised.",
+        help="(Optional) Remove more than just the expected day's expired data. "
+        "If more than 3 backups are found this will cause an exception to be "
+        "raised.",
         default=False,
     )
     parser.add_argument(
