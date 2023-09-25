@@ -181,133 +181,134 @@ def main():
     # Get Cluster information from CrunchyBridge
     clusters = get_crunchy_clusters()
     for cluster in clusters:
-        if cluster["name"] == args.backend:
-            download_path = f"{LOCAL_TEMP_DOWNLOADS_PATH}{cluster['name']}"
-            backup_info = get_cluster_backup_info(cluster["id"])
+        if cluster["name"] != args.backend:
+            continue
+        download_path = f"{LOCAL_TEMP_DOWNLOADS_PATH}{cluster['name']}"
+        backup_info = get_cluster_backup_info(cluster["id"])
 
-            download_env = {
-                "AWS_ACCESS_KEY_ID": backup_info["aws"]["s3_key"],
-                "AWS_SECRET_ACCESS_KEY": backup_info["aws"]["s3_key_secret"],
-                "AWS_SESSION_TOKEN": backup_info["aws"]["s3_token"],
-            }
-            crunchy_backup_prefix = f"/backup/{backup_info['stanza']}"
+        download_env = {
+            "AWS_ACCESS_KEY_ID": backup_info["aws"]["s3_key"],
+            "AWS_SECRET_ACCESS_KEY": backup_info["aws"]["s3_key_secret"],
+            "AWS_SESSION_TOKEN": backup_info["aws"]["s3_token"],
+        }
+        crunchy_backup_prefix = f"/backup/{backup_info['stanza']}"
 
-            recursive_path_suffixes = [
-                "/archive",
-                f"{crunchy_backup_prefix}/backup.history",
-            ]
-            file_path_suffixes = [
-                f"{crunchy_backup_prefix}/backup.info",
-                f"{crunchy_backup_prefix}/backup.info.copy",
-            ]
+        recursive_path_suffixes = [
+            "/archive",
+            f"{crunchy_backup_prefix}/backup.history",
+        ]
+        file_path_suffixes = [
+            f"{crunchy_backup_prefix}/backup.info",
+            f"{crunchy_backup_prefix}/backup.info.copy",
+        ]
 
-            # If a target backup name was specified, check the backup is available
-            # and only copy that backup to AspirEDU's S3 Bucket
-            if args.target:
-                if args.target in [backup["name"] for backup in backup_info["backups"]]:
-                    if not backup_exists(
-                        aspire_s3_client,
-                        aspire_bucket,
-                        cluster["name"],
-                        backup_info["stanza"],
-                        args.target,
-                    ):
-                        recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{args.target}")
-                    else:
-                        print("Target backup already exists in AspirEDU S3 Bucket")
-                        signal_dead_mans_snitch()
-                        exit(0)
+        # If a target backup name was specified, check the backup is available
+        # and only copy that backup to AspirEDU's S3 Bucket
+        if args.target:
+            if args.target in [backup["name"] for backup in backup_info["backups"]]:
+                if not backup_exists(
+                    aspire_s3_client,
+                    aspire_bucket,
+                    cluster["name"],
+                    backup_info["stanza"],
+                    args.target,
+                ):
+                    recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{args.target}")
                 else:
-                    print(
-                        f"Target backup name {args.target} was not found in list of available"
-                        f" CrunchyBridge backups for {cluster['name']}"
-                    )
+                    print("Target backup already exists in AspirEDU S3 Bucket")
                     signal_dead_mans_snitch()
                     exit(0)
             else:
-                # Determine if there are any new CrunchyBridge backups to move
-                has_new_backup = False
-                for backup in backup_info["backups"]:
-                    if not backup_exists(
-                        aspire_s3_client,
-                        aspire_bucket,
-                        cluster["name"],
-                        backup_info["stanza"],
-                        backup["name"],
-                    ):
-                        has_new_backup = True
-                        print(
-                            f"{cluster['name']}: Backup {backup['name']} not found in AspirEDU "
-                            f"Bucket... Adding to download list!"
-                        )
-                        recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{backup['name']}")
-                if not has_new_backup:
-                    print("No new backups found!! Exiting script :)")
-                    signal_dead_mans_snitch()
-                    exit(0)
+                print(
+                    f"Target backup name {args.target} was not found in list of available"
+                    f" CrunchyBridge backups for {cluster['name']}"
+                )
+                signal_dead_mans_snitch()
+                exit(0)
+        else:
+            # Determine if there are any new CrunchyBridge backups to move
+            has_new_backup = False
+            for backup in backup_info["backups"]:
+                if not backup_exists(
+                    aspire_s3_client,
+                    aspire_bucket,
+                    cluster["name"],
+                    backup_info["stanza"],
+                    backup["name"],
+                ):
+                    has_new_backup = True
+                    print(
+                        f"{cluster['name']}: Backup {backup['name']} not found in AspirEDU "
+                        f"Bucket... Adding to download list!"
+                    )
+                    recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{backup['name']}")
+            if not has_new_backup:
+                print("No new backups found!! Exiting script :)")
+                signal_dead_mans_snitch()
+                exit(0)
 
-            crunchy_s3_path = (
-                f's3://{backup_info["aws"]["s3_bucket"]}/'
-                f'{backup_info["cluster_id"]}/{backup_info["stanza"]}'
-            )
+        crunchy_s3_path = (
+            f's3://{backup_info["aws"]["s3_bucket"]}/'
+            f'{backup_info["cluster_id"]}/{backup_info["stanza"]}'
+        )
 
-            command_lists = [
+        command_lists = [
+            [
+                "aws",
+                "s3",
+                "cp",
+                f"{crunchy_s3_path}{recursive_path_suffix}",
+                f"{download_path}{recursive_path_suffix}",
+                "--recursive",
+            ]
+            for recursive_path_suffix in recursive_path_suffixes
+        ]
+        command_lists.extend(
+            [
                 [
                     "aws",
                     "s3",
                     "cp",
-                    f"{crunchy_s3_path}{recursive_path_suffix}",
-                    f"{download_path}{recursive_path_suffix}",
-                    "--recursive",
+                    f"{crunchy_s3_path}{path_suffix}",
+                    f"{download_path}{path_suffix}",
                 ]
-                for recursive_path_suffix in recursive_path_suffixes
+                for path_suffix in file_path_suffixes
             ]
-            command_lists.extend(
-                [
-                    [
-                        "aws",
-                        "s3",
-                        "cp",
-                        f"{crunchy_s3_path}{path_suffix}",
-                        f"{download_path}{path_suffix}",
-                    ]
-                    for path_suffix in file_path_suffixes
-                ]
+        )
+        download_finishes = []
+        upload_finishes = []
+
+        for i, command_list in enumerate(command_lists):
+            command = " ".join(command_list)
+
+            download_process = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+                env=download_env,
+                shell=True,
             )
-            download_finishes = []
-            upload_finishes = []
 
-            for i, command_list in enumerate(command_lists):
-                command = " ".join(command_list)
-
-                download_process = subprocess.Popen(
-                    command,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    universal_newlines=True,
-                    env=download_env,
-                    shell=True,
-                )
-
-                watch_process_logs(download_process)
-                print(f"{i + 1} / {len(command_lists)} downloads complete! Proceeding to upload...")
-                download_finishes.append(datetime.utcnow().replace(tzinfo=tz))
-                upload_all_files_in_dir(
-                    download_path,
-                    backup_info["stanza"],
-                    aspire_bucket,
-                    cluster["name"],
-                    BASE_S3_PREFIX,
-                )
-                upload_finishes.append(datetime.utcnow().replace(tzinfo=tz))
-                delete_all_files_in_dir(download_path)
-
-            summarize(
-                script_start,
-                datetime.utcnow().replace(tzinfo=tz),
-                download_finishes,
-                upload_finishes,
+            watch_process_logs(download_process)
+            print(f"{i + 1} / {len(command_lists)} downloads complete! Proceeding to upload...")
+            download_finishes.append(datetime.utcnow().replace(tzinfo=tz))
+            upload_all_files_in_dir(
+                download_path,
+                backup_info["stanza"],
+                aspire_bucket,
+                cluster["name"],
+                BASE_S3_PREFIX,
             )
+            upload_finishes.append(datetime.utcnow().replace(tzinfo=tz))
+            delete_all_files_in_dir(download_path)
+
+        summarize(
+            script_start,
+            datetime.utcnow().replace(tzinfo=tz),
+            download_finishes,
+            upload_finishes,
+        )
 
     # Signal Dead Man's Snitch and terminate
     signal_dead_mans_snitch()
