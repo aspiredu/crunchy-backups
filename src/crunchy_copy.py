@@ -147,8 +147,8 @@ def signal_dead_mans_snitch(cluster: str):
 
 class CrunchyCopy:
     def __init__(self, bucket_name: str, cluster_name: str, backup_target: Optional[str] = None):
-        self.s3, self.s3_client = get_s3(ASPIRE_AWS_ACCESS_KEY_ID, ASPIRE_AWS_SECRET_ACCESS_KEY)
-        self.bucket = self.s3.Bucket(bucket_name)
+        self.s3_resource, self.s3 = get_s3(ASPIRE_AWS_ACCESS_KEY_ID, ASPIRE_AWS_SECRET_ACCESS_KEY)
+        self.bucket = self.s3_resource.Bucket(bucket_name)
         self.backup_target = backup_target
         for cluster in get_crunchy_clusters():
             if cluster["name"] != cluster_name:
@@ -232,7 +232,7 @@ class CrunchyCopy:
         if self.backup_target:
             if self.backup_target in [backup["name"] for backup in self.backup_info["backups"]]:
                 if not backup_exists(
-                    self.s3_client,
+                    self.s3,
                     self.bucket,
                     self.cluster["name"],
                     self.backup_info["stanza"],
@@ -253,7 +253,7 @@ class CrunchyCopy:
             has_new_backup = False
             for backup in self.backup_info["backups"]:
                 if not backup_exists(
-                    self.s3_client,
+                    self.s3,
                     self.bucket,
                     self.cluster["name"],
                     self.backup_info["stanza"],
