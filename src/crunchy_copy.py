@@ -215,6 +215,9 @@ class CrunchyCopy:
             )
             delete_all_files_in_dir(download_path)
 
+    def _should_process_backup(self, backup: dict):
+        return not self.backup_target or self.backup_target == backup["name"]
+
     def _get_copy_paths(self):
         crunchy_backup_prefix = f"/backup/{self.backup_info['stanza']}"
 
@@ -227,47 +230,27 @@ class CrunchyCopy:
             f"{crunchy_backup_prefix}/backup.info.copy",
         ]
 
-        # If a target backup name was specified, check the backup is available
-        # and only copy that backup to AspirEDU's S3 Bucket
-        if self.backup_target:
-            if self.backup_target in [backup["name"] for backup in self.backup_info["backups"]]:
-                if not backup_exists(
-                    self.s3,
-                    self.bucket,
-                    self.cluster["name"],
-                    self.backup_info["stanza"],
-                    self.backup_target,
-                ):
-                    recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{self.backup_target}")
-                else:
-                    print("Target backup already exists in AspirEDU S3 Bucket")
-                    return [], []
-            else:
+        # Determine if there are any new CrunchyBridge backups to move
+        has_new_backup = False
+        for backup in self.backup_info["backups"]:
+            if not self._should_process_backup(backup):
+                continue
+            if not backup_exists(
+                self.s3,
+                self.bucket,
+                self.cluster["name"],
+                self.backup_info["stanza"],
+                backup["name"],
+            ):
+                has_new_backup = True
                 print(
-                    f"Target backup name {self.backup_target} was not found in list of available"
-                    f" CrunchyBridge backups for {self.cluster['name']}"
+                    f"{self.cluster['name']}: Backup {backup['name']} not found in AspirEDU "
+                    f"Bucket... Adding to download list!"
                 )
-                return [], []
-        else:
-            # Determine if there are any new CrunchyBridge backups to move
-            has_new_backup = False
-            for backup in self.backup_info["backups"]:
-                if not backup_exists(
-                    self.s3,
-                    self.bucket,
-                    self.cluster["name"],
-                    self.backup_info["stanza"],
-                    backup["name"],
-                ):
-                    has_new_backup = True
-                    print(
-                        f"{self.cluster['name']}: Backup {backup['name']} not found in AspirEDU "
-                        f"Bucket... Adding to download list!"
-                    )
-                    recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{backup['name']}")
-            if not has_new_backup:
-                print("No new backups found!! Exiting script :)")
-                return [], []
+                recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{backup['name']}")
+        if not has_new_backup:
+            print("No new backups found!! Exiting script :)")
+            return [], []
         return recursive_path_suffixes, file_path_suffixes
 
     def process(self):
