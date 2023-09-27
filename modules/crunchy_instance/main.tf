@@ -13,7 +13,7 @@ resource "aws_instance" "cb_backup" {
   security_groups = ["ssh-no-http"]
 
   tags = {
-    Name = "${var.ASPIRE_BACKEND}-pgbackups",
+    Name = "${var.ASPIRE_CLUSTER}-pgbackups",
   }
   user_data = base64encode(templatefile("${path.module}/ec2_setup.tftpl", {
     CRUNCHY_TEAM_ID              = var.CRUNCHY_TEAM_ID
@@ -21,7 +21,7 @@ resource "aws_instance" "cb_backup" {
     ASPIRE_AWS_ACCESS_KEY_ID     = var.ASPIRE_AWS_ACCESS_KEY_ID
     ASPIRE_AWS_SECRET_ACCESS_KEY = var.ASPIRE_AWS_SECRET_ACCESS_KEY
     GIT_PAT                      = var.GIT_PAT
-    ASPIRE_BACKEND               = var.ASPIRE_BACKEND
+    ASPIRE_CLUSTER               = var.ASPIRE_CLUSTER
     SENTRY_DSN                   = var.SENTRY_DSN
   }))
 }
@@ -42,7 +42,7 @@ resource "aws_volume_attachment" "ec2_ebs_att" {
   force_detach = true
 }
 
-output "ASPIRE_BACKEND" {
-  value       = var.ASPIRE_BACKEND
+output "ASPIRE_CLUSTER" {
+  value       = var.ASPIRE_CLUSTER
   description = "The backend the script is being run for."
 }

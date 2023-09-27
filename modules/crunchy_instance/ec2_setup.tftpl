@@ -13,7 +13,7 @@ echo "Creating XFS Filesystem on Attached Volume"
 mkfs -t xfs /dev/nvme1n1
 
 echo "Creating new directories"
-mkdir -p "$LOCAL_TEMP_DOWNLOADS_PATH"${ASPIRE_BACKEND}
+mkdir -p "$LOCAL_TEMP_DOWNLOADS_PATH"${ASPIRE_CLUSTER}
 chmod -R 760 $LOCAL_TEMP_DOWNLOADS_PATH
 
 echo "Mounting Attached Volume"
@@ -49,7 +49,7 @@ BASE_S3_PREFIX = "crunchybridge/"
 EOF
 
 echo "Running script..."
-python3 ./src/crunchy_copy.py --backend ${ASPIRE_BACKEND}
+python3 ./src/crunchy_copy.py --cluster ${ASPIRE_CLUSTER}
 
 COUNTER=1
 while true
@@ -60,7 +60,7 @@ do
     -H "Accept: application/vnd.github.v3+json" \
     -H "Authorization: Bearer ${GIT_PAT}" \
     https://api.github.com/repos/aspiredu/crunchy-backups/dispatches \
-    -d '{"event_type": "destroy", "client_payload": {"success": true, "backend": "${ASPIRE_BACKEND}"}}'
+    -d '{"event_type": "destroy", "client_payload": {"success": true, "backend": "${ASPIRE_CLUSTER}"}}'
     sleep 20m
     COUNTER=$[$COUNTER +1]
 done

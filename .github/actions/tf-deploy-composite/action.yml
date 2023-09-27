@@ -49,7 +49,7 @@ runs:
         TF_VAR_ASPIRE_AWS_ACCESS_KEY_ID: ${{ inputs.ASPIRE_AWS_ACCESS_KEY_ID }}
         TF_VAR_ASPIRE_AWS_SECRET_ACCESS_KEY: ${{ inputs.ASPIRE_AWS_SECRET_ACCESS_KEY }}
         TF_VAR_GIT_PAT: ${{ inputs.GIT_PAT }}
-        TF_VAR_ASPIRE_BACKEND: ${{ inputs.backend }}
+        TF_VAR_ASPIRE_CLUSTER: ${{ inputs.backend }}
         TF_VAR_SENTRY_DSN: ${{ inputs.SENTRY_DSN }}
         AWS_ACCESS_KEY_ID: ${{ inputs.TERRAFORM_AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.TERRAFORM_AWS_SECRET_ACCESS_KEY }}

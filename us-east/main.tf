@@ -18,6 +18,6 @@ module "crunchy_instance" {
   ASPIRE_AWS_ACCESS_KEY_ID     = var.ASPIRE_AWS_ACCESS_KEY_ID
   ASPIRE_AWS_SECRET_ACCESS_KEY = var.ASPIRE_AWS_SECRET_ACCESS_KEY
   GIT_PAT                      = var.GIT_PAT
-  ASPIRE_BACKEND               = var.ASPIRE_BACKEND
+  ASPIRE_CLUSTER               = var.ASPIRE_CLUSTER
   SENTRY_DSN                   = var.SENTRY_DSN
 }

@@ -40,17 +40,17 @@ export TF_VAR_CRUNCHY_API_KEY=CRUNCHY_API_KEY
 export TF_VAR_ASPIRE_AWS_ACCESS_KEY_ID=YOUR_AWS_ACCESS_KEY
 export TF_VAR_ASPIRE_AWS_SECRET_ACCESS_KEY=YOUR_AWS_SECRET_KEY
 export TF_VAR_GIT_PAT=GIT_PERSONAL_ACCESS_TOKEN
-export TF_VAR_ASPIRE_BACKEND=ASPIRE_BACKEND_TO_RUN_FOR
+export TF_VAR_ASPIRE_CLUSTER=ASPIRE_CLUSTER_TO_RUN_FOR
 export AWS_ACCESS_KEY_ID=TERRAFORM_AWS_ACCESS_KEY
 export AWS_SECRET_ACCESS_KEY=TERRAFORM_AWS_SECRET_KEY
 ```
 
 3. Navigate to the directory in this repository for the region to use for testing (likely `us-east`).
 
-4. Initialize Terraform with the following command, replacing `{ ASPIRE_BACKEND }` with the name of the backend being used for testing (this should match the `TF_VAR_ASPIRE_BACKEND` variable set above):
+4. Initialize Terraform with the following command, replacing `{ ASPIRE_CLUSTER }` with the name of the backend being used for testing (this should match the `TF_VAR_ASPIRE_CLUSTER` variable set above):
 
 ```
-terraform init -backend-config="key={ ASPIRE_BACKEND }/terraform.tfstate"
+terraform init -backend-config="key={ ASPIRE_CLUSTER }/terraform.tfstate"
 ```
 e.g.
 ```
@@ -91,4 +91,3 @@ curl http://169.254.169.254/latest/user-data
 ```
 
 The logs for the Start-Up Script can be found at `/var/log/cloud-init-output.log`.
-

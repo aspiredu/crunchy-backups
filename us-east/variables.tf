@@ -33,7 +33,7 @@ variable "GIT_PAT" {
   default     = ""
 }
 
-variable "ASPIRE_BACKEND" {
+variable "ASPIRE_CLUSTER" {
   description = "The backend to run the script on."
   type        = string
   default     = ""
