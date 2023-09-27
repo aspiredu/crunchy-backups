@@ -28,6 +28,7 @@ SENTRY_DSN = os.getenv("SENTRY_DSN")
 
 STAGING_BACKENDS = ["aspirestaging", "aspiredu-stg"]
 AU_BACKENDS = ["aspiredu-au"]
+TZ = ZoneInfo("US/Eastern")
 
 
 def get_crunchy_clusters():
@@ -125,7 +126,7 @@ def seconds_to_readable(seconds):
     return h, m, s
 
 
-def summarize(start, finish, download_finishes, upload_finishes):
+def summarize(start, finish):
     print("SUMMARY:")
     print(f"Start: {start}")
     print(f"Finish: {finish}")
@@ -144,116 +145,51 @@ def signal_dead_mans_snitch(cluster: str):
         return
 
 
-def crunchy_copy(bucket_name: str, cluster: str, backup_target: Optional[str] = None):
-    tz = ZoneInfo("US/Eastern")
-    script_start = datetime.utcnow().replace(tzinfo=tz)
-    # Establish connection to AspirEDU's S3 Resource
-    aspire_s3_resource, aspire_s3_client = get_s3(
-        ASPIRE_AWS_ACCESS_KEY_ID, ASPIRE_AWS_SECRET_ACCESS_KEY
-    )
+class CrunchyCopy:
+    def __init__(self, bucket_name: str, cluster_name: str, backup_target: Optional[str] = None):
+        self.s3, self.s3_client = get_s3(ASPIRE_AWS_ACCESS_KEY_ID, ASPIRE_AWS_SECRET_ACCESS_KEY)
+        self.bucket = self.s3.Bucket(bucket_name)
+        self.backup_target = backup_target
+        for cluster in get_crunchy_clusters():
+            if cluster["name"] != cluster_name:
+                continue
+            self.cluster = cluster
+            self.backup_info = get_cluster_backup_info(cluster["id"])
+            break
 
-    # Connect to AspirEDU backup Bucket
-    aspire_bucket = aspire_s3_resource.Bucket(bucket_name)
-
-    # Get Cluster information from CrunchyBridge
-    clusters = get_crunchy_clusters()
-    for cb_cluster in clusters:
-        if cb_cluster["name"] != cluster:
-            continue
-        download_path = f"{LOCAL_TEMP_DOWNLOADS_PATH}{cb_cluster['name']}"
-        backup_info = get_cluster_backup_info(cb_cluster["id"])
-
-        download_env = {
-            "AWS_ACCESS_KEY_ID": backup_info["aws"]["s3_key"],
-            "AWS_SECRET_ACCESS_KEY": backup_info["aws"]["s3_key_secret"],
-            "AWS_SESSION_TOKEN": backup_info["aws"]["s3_token"],
-        }
-        crunchy_backup_prefix = f"/backup/{backup_info['stanza']}"
-
-        recursive_path_suffixes = [
-            "/archive",
-            f"{crunchy_backup_prefix}/backup.history",
-        ]
-        file_path_suffixes = [
-            f"{crunchy_backup_prefix}/backup.info",
-            f"{crunchy_backup_prefix}/backup.info.copy",
-        ]
-
-        # If a target backup name was specified, check the backup is available
-        # and only copy that backup to AspirEDU's S3 Bucket
-        if backup_target:
-            if backup_target in [backup["name"] for backup in backup_info["backups"]]:
-                if not backup_exists(
-                    aspire_s3_client,
-                    aspire_bucket,
-                    cb_cluster["name"],
-                    backup_info["stanza"],
-                    backup_target,
-                ):
-                    recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{backup_target}")
-                else:
-                    print("Target backup already exists in AspirEDU S3 Bucket")
-                    signal_dead_mans_snitch(cluster)
-                    exit(0)
-            else:
-                print(
-                    f"Target backup name {backup_target} was not found in list of available"
-                    f" CrunchyBridge backups for {cb_cluster['name']}"
-                )
-                signal_dead_mans_snitch(cluster)
-                exit(0)
-        else:
-            # Determine if there are any new CrunchyBridge backups to move
-            has_new_backup = False
-            for backup in backup_info["backups"]:
-                if not backup_exists(
-                    aspire_s3_client,
-                    aspire_bucket,
-                    cb_cluster["name"],
-                    backup_info["stanza"],
-                    backup["name"],
-                ):
-                    has_new_backup = True
-                    print(
-                        f"{cb_cluster['name']}: Backup {backup['name']} not found in AspirEDU "
-                        f"Bucket... Adding to download list!"
-                    )
-                    recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{backup['name']}")
-            if not has_new_backup:
-                print("No new backups found!! Exiting script :)")
-                signal_dead_mans_snitch(cluster)
-                exit(0)
-
+    def _copy_paths(self, recursive_paths, file_paths):
         crunchy_s3_path = (
-            f's3://{backup_info["aws"]["s3_bucket"]}/'
-            f'{backup_info["cluster_id"]}/{backup_info["stanza"]}'
+            f's3://{self.backup_info["aws"]["s3_bucket"]}/'
+            f'{self.backup_info["cluster_id"]}/{self.backup_info["stanza"]}'
         )
+        download_path = f"{LOCAL_TEMP_DOWNLOADS_PATH}{self.cluster['name']}"
 
         command_lists = [
             [
                 "aws",
                 "s3",
                 "cp",
-                f"{crunchy_s3_path}{recursive_path_suffix}",
-                f"{download_path}{recursive_path_suffix}",
+                f"{crunchy_s3_path}{path}",
+                f"{download_path}{path}",
                 "--recursive",
             ]
-            for recursive_path_suffix in recursive_path_suffixes
-        ]
-        command_lists.extend(
+            for path in recursive_paths
+        ] + [
             [
-                [
-                    "aws",
-                    "s3",
-                    "cp",
-                    f"{crunchy_s3_path}{path_suffix}",
-                    f"{download_path}{path_suffix}",
-                ]
-                for path_suffix in file_path_suffixes
+                "aws",
+                "s3",
+                "cp",
+                f"{crunchy_s3_path}{path}",
+                f"{download_path}{path}",
             ]
-        )
-        download_finishes = []
-        upload_finishes = []
+            for path in file_paths
+        ]
+
+        download_env = {
+            "AWS_ACCESS_KEY_ID": self.backup_info["aws"]["s3_key"],
+            "AWS_SECRET_ACCESS_KEY": self.backup_info["aws"]["s3_key_secret"],
+            "AWS_SESSION_TOKEN": self.backup_info["aws"]["s3_token"],
+        }
 
         for i, command_list in enumerate(command_lists):
             command = " ".join(command_list)
@@ -269,26 +205,87 @@ def crunchy_copy(bucket_name: str, cluster: str, backup_target: Optional[str] = 
 
             watch_process_logs(download_process)
             print(f"{i + 1} / {len(command_lists)} downloads complete! Proceeding to upload...")
-            download_finishes.append(datetime.utcnow().replace(tzinfo=tz))
+
             upload_all_files_in_dir(
                 download_path,
-                backup_info["stanza"],
-                aspire_bucket,
-                cb_cluster["name"],
+                self.backup_info["stanza"],
+                self.bucket,
+                self.cluster["name"],
                 BASE_S3_PREFIX,
             )
-            upload_finishes.append(datetime.utcnow().replace(tzinfo=tz))
             delete_all_files_in_dir(download_path)
+
+    def _get_copy_paths(self):
+        crunchy_backup_prefix = f"/backup/{self.backup_info['stanza']}"
+
+        recursive_path_suffixes = [
+            "/archive",
+            f"{crunchy_backup_prefix}/backup.history",
+        ]
+        file_path_suffixes = [
+            f"{crunchy_backup_prefix}/backup.info",
+            f"{crunchy_backup_prefix}/backup.info.copy",
+        ]
+
+        # If a target backup name was specified, check the backup is available
+        # and only copy that backup to AspirEDU's S3 Bucket
+        if self.backup_target:
+            if self.backup_target in [backup["name"] for backup in self.backup_info["backups"]]:
+                if not backup_exists(
+                    self.s3_client,
+                    self.bucket,
+                    self.cluster["name"],
+                    self.backup_info["stanza"],
+                    self.backup_target,
+                ):
+                    recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{self.backup_target}")
+                else:
+                    print("Target backup already exists in AspirEDU S3 Bucket")
+                    signal_dead_mans_snitch(self.cluster["name"])
+                    return [], []
+            else:
+                print(
+                    f"Target backup name {self.backup_target} was not found in list of available"
+                    f" CrunchyBridge backups for {self.cluster['name']}"
+                )
+                signal_dead_mans_snitch(self.cluster["name"])
+                return [], []
+        else:
+            # Determine if there are any new CrunchyBridge backups to move
+            has_new_backup = False
+            for backup in self.backup_info["backups"]:
+                if not backup_exists(
+                    self.s3_client,
+                    self.bucket,
+                    self.cluster["name"],
+                    self.backup_info["stanza"],
+                    backup["name"],
+                ):
+                    has_new_backup = True
+                    print(
+                        f"{self.cluster['name']}: Backup {backup['name']} not found in AspirEDU "
+                        f"Bucket... Adding to download list!"
+                    )
+                    recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{backup['name']}")
+            if not has_new_backup:
+                print("No new backups found!! Exiting script :)")
+                signal_dead_mans_snitch(self.cluster["name"])
+                return [], []
+        return recursive_path_suffixes, file_path_suffixes
+
+    def process(self):
+        script_start = datetime.utcnow().replace(tzinfo=TZ)
+
+        recursive_paths, file_paths = self._get_copy_paths()
+        self._copy_paths(recursive_paths, file_paths)
 
         summarize(
             script_start,
-            datetime.utcnow().replace(tzinfo=tz),
-            download_finishes,
-            upload_finishes,
+            datetime.utcnow().replace(tzinfo=TZ),
         )
 
-    # Signal Dead Man's Snitch and terminate
-    signal_dead_mans_snitch(cluster)
+        # Signal Dead Man's Snitch and terminate
+        signal_dead_mans_snitch(self.cluster["name"])
 
 
 def main():
@@ -324,7 +321,7 @@ def main():
     bucket_name = (
         "aspiredu-pgbackups" if args.cluster not in AU_BACKENDS else "aspiredu-pgbackups-au"
     )
-    crunchy_copy(bucket_name, args.cluster, args.target)
+    CrunchyCopy(bucket_name, args.cluster, args.target).process()
     exit(0)
 
 
