@@ -241,14 +241,12 @@ class CrunchyCopy:
                     recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{self.backup_target}")
                 else:
                     print("Target backup already exists in AspirEDU S3 Bucket")
-                    signal_dead_mans_snitch(self.cluster["name"])
                     return [], []
             else:
                 print(
                     f"Target backup name {self.backup_target} was not found in list of available"
                     f" CrunchyBridge backups for {self.cluster['name']}"
                 )
-                signal_dead_mans_snitch(self.cluster["name"])
                 return [], []
         else:
             # Determine if there are any new CrunchyBridge backups to move
@@ -269,7 +267,6 @@ class CrunchyCopy:
                     recursive_path_suffixes.append(f"{crunchy_backup_prefix}/{backup['name']}")
             if not has_new_backup:
                 print("No new backups found!! Exiting script :)")
-                signal_dead_mans_snitch(self.cluster["name"])
                 return [], []
         return recursive_path_suffixes, file_path_suffixes
 
