@@ -5,7 +5,6 @@ import shutil
 import subprocess
 from datetime import datetime
 from http import HTTPStatus
-from typing import Optional
 from zoneinfo import ZoneInfo
 
 import requests
@@ -29,6 +28,10 @@ SENTRY_DSN = os.getenv("SENTRY_DSN")
 STAGING_BACKENDS = ["aspirestaging", "aspiredu-stg"]
 AU_BACKENDS = ["aspiredu-au"]
 TZ = ZoneInfo("US/Eastern")
+
+
+class CantFindCrunchyBridgeCluster(ValueError):
+    pass
 
 
 def get_crunchy_clusters():
@@ -146,16 +149,25 @@ def signal_dead_mans_snitch(cluster: str):
 
 
 class CrunchyCopy:
-    def __init__(self, bucket_name: str, cluster_name: str, backup_target: Optional[str] = None):
+    def __init__(self, bucket_name: str, cluster_name: str, backup_target: str):
+        """
+
+        :param bucket_name: The name of the bucket to copy to.
+        :param cluster_name: The name of the CrunchyBridge cluster that the backup is from.
+        :param backup_target: The date prefix for the backup we're targeting, such as `20200101`
+        """
         self.s3_resource, self.s3 = get_s3(ASPIRE_AWS_ACCESS_KEY_ID, ASPIRE_AWS_SECRET_ACCESS_KEY)
         self.bucket = self.s3_resource.Bucket(bucket_name)
         self.backup_target = backup_target
+        self.cluster, self.backup_info = None, None
         for cluster in get_crunchy_clusters():
             if cluster["name"] != cluster_name:
                 continue
             self.cluster = cluster
             self.backup_info = get_cluster_backup_info(cluster["id"])
             break
+        if self.cluster is None:
+            raise CantFindCrunchyBridgeCluster("Could not find cluster with the given name")
 
     def _copy_paths(self, recursive_paths, file_paths):
         crunchy_s3_path = (
@@ -295,13 +307,16 @@ def main():
         help="(Optional) The name of the database cluster to pretend to create",
     )
     parser.add_argument(
-        "-t", "--target", help="(Optional) The name of a specific backup to target."
+        "-t",
+        "--target",
+        help="(Optional) The name of a specific backup to target otherwise targets today's backups.",
     )
     args = parser.parse_args()
     bucket_name = (
         "aspiredu-pgbackups" if args.cluster not in AU_BACKENDS else "aspiredu-pgbackups-au"
     )
-    CrunchyCopy(bucket_name, args.cluster, args.target).process()
+    backup_target = args.target or datetime.now().strftime("%Y%m%d")
+    CrunchyCopy(bucket_name, args.cluster, backup_target=backup_target).process()
     exit(0)
 
 
