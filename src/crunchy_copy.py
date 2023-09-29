@@ -109,17 +109,18 @@ def watch_process_logs(process):
 
 def upload_all_files_in_dir(source_dir, bucket, prefix):
     print("Uploading files...")
+    expiration = three_years_from_now()
     for root, _, files in os.walk(source_dir):
         for file in files:
             full_path = os.path.join(root, file)
 
             # Set up the file structure for S3
-            new_file_key = f"{prefix}/{full_path[len(source_dir):]}"
+            new_file_key = f"{prefix}{full_path[len(source_dir):]}"
             print(f"Uploading... {new_file_key}")
             bucket.upload_file(
                 os.path.join(root, file),
                 new_file_key,
-                Expires=three_years_from_now(),
+                Expires=expiration,
                 StorageClass=STORAGE_CLASS,
             )
     return
@@ -127,18 +128,7 @@ def upload_all_files_in_dir(source_dir, bucket, prefix):
 
 def delete_all_files_in_dir(source_dir):
     print("Cleaning up!!")
-    if not source_dir.endswith("/"):
-        source_dir = source_dir + "/"
-    for filename in os.listdir(source_dir):
-        file_path = os.path.join(source_dir, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print("Failed to delete %s. Reason: %s" % (file_path, e))
-    return
+    shutil.rmtree(source_dir)
 
 
 def seconds_to_readable(seconds):
@@ -185,16 +175,16 @@ class CrunchyCopy:
         )
         self.dry_run = dry_run
 
-    @classmethod
-    def get_cluster(cls, cluster_name: str) -> dict:
+    @staticmethod
+    def get_cluster(cluster_name: str) -> dict:
         """Find the cluster from the CrunchyBridge API with the given name"""
         for cluster in get_crunchy_clusters():
             if cluster["name"] == cluster_name:
                 return cluster
         raise CantFindCrunchyBridgeCluster("Could not find cluster with the given name")
 
-    @classmethod
-    def s3_copy_command(cls, src, dest, relative_path) -> str:
+    @staticmethod
+    def s3_copy_command(src, dest, relative_path) -> str:
         command = f"aws s3 cp {src}{relative_path} {dest}{relative_path}"
         if relative_path.endswith("/"):
             # Any directory needs to be recursive
@@ -298,8 +288,7 @@ class CrunchyCopy:
     def process(self):
         script_start = datetime.utcnow().replace(tzinfo=TZ)
 
-        file_paths = self._get_copy_paths()
-        self._copy_paths(file_paths)
+        self._copy_paths(self._get_copy_paths())
 
         summarize(
             script_start,

@@ -6,3 +6,4 @@ sentry-sdk
 pip-tools
 time-machine
 pytest
+pytest-mock
