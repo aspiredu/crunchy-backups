@@ -22,7 +22,7 @@ CRUNCHY_TEAM_ID = os.getenv("CRUNCHY_TEAM_ID")
 ASPIRE_AWS_ACCESS_KEY_ID = os.getenv("ASPIRE_AWS_ACCESS_KEY_ID")
 ASPIRE_AWS_SECRET_ACCESS_KEY = os.getenv("ASPIRE_AWS_SECRET_ACCESS_KEY")
 
-LOCAL_TEMP_DOWNLOADS_PATH = os.getenv("LOCAL_TEMP_DOWNLOADS_PATH", "temp/")
+LOCAL_TEMP_DOWNLOADS_PATH = os.getenv("LOCAL_TEMP_DOWNLOADS_PATH", "tmp/")
 
 # The v2 directory is necessary so that we can more easily delete the other
 # backups when all have been converted to our the format that either includes
