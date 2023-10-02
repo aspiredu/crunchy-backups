@@ -40,14 +40,18 @@ def test_upload_all_files_in_dir(mocker, patch_storage_class):
         mocker.call(
             "tmp/file.txt",
             "pre-/file.txt",
-            Expires=datetime(2022, 12, 31, 19, 0, tzinfo=edt_tz),
-            StorageClass="TEST_STORAGE",
+            ExtraArgs={
+                "Expires": datetime(2022, 12, 31, 19, 0, tzinfo=edt_tz),
+                "StorageClass": "TEST_STORAGE",
+            },
         ),
         mocker.call(
             "tmp/sub1/file.txt",
             "pre-/sub1/file.txt",
-            Expires=datetime(2022, 12, 31, 19, 0, tzinfo=edt_tz),
-            StorageClass="TEST_STORAGE",
+            ExtraArgs={
+                "Expires": datetime(2022, 12, 31, 19, 0, tzinfo=edt_tz),
+                "StorageClass": "TEST_STORAGE",
+            },
         ),
     ]
 

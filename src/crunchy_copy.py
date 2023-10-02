@@ -120,15 +120,14 @@ def upload_all_files_in_dir(source_dir, bucket, prefix):
             bucket.upload_file(
                 os.path.join(root, file),
                 new_file_key,
-                Expires=expiration,
-                StorageClass=STORAGE_CLASS,
+                ExtraArgs={"Expires": expiration, "StorageClass": STORAGE_CLASS},
             )
     return
 
 
 def delete_all_files_in_dir(source_dir):
     print("Cleaning up!!")
-    shutil.rmtree(source_dir)
+    shutil.rmtree(source_dir, ignore_errors=True)
 
 
 def seconds_to_readable(seconds):
@@ -316,9 +315,6 @@ def main():
         description="Moves backups from CrunchyBridge's S3 Buckets to " "AspirEDU's S3 Bucket",
     )
 
-    parser.add_argument(
-        "-b", "--bucket", dest="bucket_name", required=True, help="The name of the bucket."
-    )
     parser.add_argument(
         "-c",
         "--cluster",
