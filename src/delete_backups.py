@@ -1,5 +1,5 @@
 """
-Delete backups in S3 bucket according to our Data Rention Policy:
+Delete backups in S3 bucket according to our Data Retention Policy:
 https://github.com/aspiredu/aspiredu/issues/7421
 """
 import argparse
@@ -107,15 +107,15 @@ def backup_directories(s3, bucket, cluster=None):
         if not cluster or common_prefix["Prefix"].endswith(f"/{cluster}/")
     ]
     for cluster_prefix in cluster_prefixes:
-        groupings = [
+        stanzas = [
             common_prefix["Prefix"]
             for common_prefix in s3.list_objects(
                 Bucket=bucket.name, Prefix=cluster_prefix, Delimiter="/"
             )["CommonPrefixes"]
         ]
-        for grouping in groupings:
+        for stanza in stanzas:
             for backup_folder_prefix in s3.list_objects(
-                Bucket=bucket.name, Prefix=grouping, Delimiter="/"
+                Bucket=bucket.name, Prefix=stanza, Delimiter="/"
             )["CommonPrefixes"]:
                 yield cluster_prefix, backup_folder_prefix["Prefix"]
 
