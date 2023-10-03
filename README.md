@@ -91,3 +91,26 @@ curl http://169.254.169.254/latest/user-data
 ```
 
 The logs for the Start-Up Script can be found at `/var/log/cloud-init-output.log`.
+
+
+## Process overview
+
+This process uses GitHub actions and Terraform to control AWS EC2 instances that
+copy our backups between S3 buckets.
+
+```mermaid
+graph TD
+    A[Start Script via Terraform tf-deploy.yml GH action] --> B{Is first or third Sat}
+    B --> |no| C[Done]
+    B --> |yes| D[Start Terraform]
+    D --> E[Spin up EC2 and EBS instances]
+    E --> F[Copy via crunchy_copy.py]
+    F --> G[Ping deadman's snitch]
+    G --> |Send GitHub API request| H[Trigger tf-destroy.yml GH action]
+    H --> I[Terraform tear down of EC2 and EBS instances]
+    I --> C
+```
+
+## Restore process
+
+See our (Database Developer docs)[https://github.com/aspiredu/aspiredu/blob/main/docs/docs/dev/database.rst]
