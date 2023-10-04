@@ -9,16 +9,13 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     environment: crunchy-backups
-    defaults:
-      run:
-        working-directory: ./us-east
     strategy:
       matrix:
         backend: [aspiredu-prd-a, aspiredu-prd-b, aspiredu-prd-c, aspiredu-prd-d, aspiredu-prd-e, aspiredu-prd-g, aspiredu-prd-h, aspiredu-prd-i, aspiredu-prd-j, aspiredu-prd-k, aspiredu-prd-l, aspireprod, aspiredu-ms]
-        working_dir: ["./us-east"]
+        working_dir: ["us-east"]
         include:
           - backend: "aspiredu-au"
-            working_dir: "./au"
+            working_dir: "au"
     steps:
       - name: Get current weekday
         id: weekday
