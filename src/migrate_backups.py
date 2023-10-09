@@ -186,7 +186,13 @@ def copy_files(s3, bucket, files_to_copy, backup_folder, storage_class, dry_run=
             )
 
 
-def migrate_backups(*, cluster: Optional[str], storage_class: Optional[str], dry_run: bool = False):
+def migrate_backups(
+    *,
+    cluster: Optional[str],
+    target: Optional[str],
+    storage_class: Optional[str],
+    dry_run: bool = False,
+):
     s3_resource, s3 = get_s3(None, None)
     for bucket in ["aspiredu-pgbackups", "aspiredu-pgbackups-au"]:
         for stanza_prefix, bucket_folder_prefix in get_backups_to_migrate(s3, bucket, cluster):
@@ -197,6 +203,8 @@ def migrate_backups(*, cluster: Optional[str], storage_class: Optional[str], dry
             )
             if match := CRUNCHYBRIDGE_BACKUP_PATTERN.match(bucket_folder_prefix.split("/")[-2]):
                 backup_folder = match.groups()[0]
+                if target and target != backup_folder:
+                    continue
                 copy_files(
                     s3,
                     bucket,
@@ -241,8 +249,18 @@ def main():
         help="(Optional) The storage class to use for the migrated files.",
         default="ONEZONE_IA",
     )
+    parser.add_argument(
+        "--target",
+        required=False,
+        help="(Optional) The backup to target (YYYYMMDD)",
+    )
     args = parser.parse_args()
-    migrate_backups(cluster=args.cluster, storage_class=args.storage_class, dry_run=args.dry_run)
+    migrate_backups(
+        cluster=args.cluster,
+        target=args.target,
+        storage_class=args.storage_class,
+        dry_run=args.dry_run,
+    )
 
 
 if __name__ == "__main__":
