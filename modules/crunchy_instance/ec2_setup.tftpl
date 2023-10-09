@@ -48,7 +48,7 @@ LOCAL_TEMP_DOWNLOADS_PATH = "$LOCAL_TEMP_DOWNLOADS_PATH"
 EOF
 
 echo "Running script..."
-python3 ./src/crunchy_copy.py --cluster ${ASPIRE_CLUSTER}
+python3 -m src.crunchy_copy --cluster ${ASPIRE_CLUSTER}
 
 COUNTER=1
 while true
