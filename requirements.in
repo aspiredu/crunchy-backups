@@ -7,3 +7,4 @@ pip-tools
 time-machine
 pytest
 pytest-mock
+pre-commit

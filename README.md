@@ -3,18 +3,18 @@ A Python script used to transfer backups stored on the CrunchyBridge S3 Bucket t
 
 ## Contributing
 
-Install pre-commit hooks:
-
-```bash
-pre-commit install
-```
-
 Install dependencies
 
 ```bash
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+```
+
+Install pre-commit hooks:
+
+```bash
+pre-commit install
 ```
 
 ### Updating Python dependencies
@@ -26,7 +26,8 @@ pip-compile --upgrade
 
 ## Testing Locally
 
-1. Ensure the Terraform CLI is installed. The following command should output the currently installed version of the Terraform CLI:
+1. Ensure the [Terraform CLI](https://developer.hashicorp.com/terraform/downloads) is installed. The
+   following command should output the currently installed version of the Terraform CLI:
 
 ```
 terraform --version
@@ -44,6 +45,9 @@ export TF_VAR_ASPIRE_CLUSTER=ASPIRE_CLUSTER_TO_RUN_FOR
 export AWS_ACCESS_KEY_ID="$TF_VAR_ASPIRE_AWS_ACCESS_KEY_ID"
 export AWS_SECRET_ACCESS_KEY="$TF_VAR_ASPIRE_AWS_SECRET_ACCESS_KEY"
 ```
+
+- [AWS access key docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey)
+- [GitHub Personal Access Token (PAT) docs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
 
 3. Load the environment variables from the file with the following command:
 
