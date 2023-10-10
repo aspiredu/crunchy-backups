@@ -51,7 +51,7 @@ SENTRY_DSN = os.getenv("SENTRY_DSN")
 def lsn_in_range(start_hex, end_hex):
     for value_decimal in range(int(start_hex, 16), int(end_hex, 16) + 1):
         value_hex = hex(value_decimal)[2:].upper()
-        yield value_hex.zfill(24)
+        yield value_hex.zfill(16)
 
 
 def parse_manifest(body) -> (str, str):
@@ -117,6 +117,8 @@ def archive_files_to_copy(s3, bucket, stanza_prefix, backup_folder_prefix):
     ]
     response = s3.get_object(Bucket=bucket, Key=backup_folder_prefix + "backup.manifest")
     start, stop = parse_manifest(response["Body"])
+    start_lsn = int(start, 16)
+    stop_lsn = int(stop, 16)
 
     archive_prefixes = s3.list_objects(Bucket=bucket, Prefix=f"{stanza_prefix}", Delimiter="/")[
         "CommonPrefixes"
@@ -124,20 +126,22 @@ def archive_files_to_copy(s3, bucket, stanza_prefix, backup_folder_prefix):
     for obj in archive_prefixes:
         archive_prefix = obj["Prefix"]
         short_lsns = set()
-        for lsn in lsn_in_range(start, stop):
-            lsn_prefix = lsn[:16]
+        # Iterate over 16 digit hex number.
+        for shortened_lsn in lsn_in_range(start[:16], stop[:16]):
             paginator = s3.get_paginator("list_objects")
             page_iterator = paginator.paginate(
                 Bucket=bucket,
                 PaginationConfig={"PageSize": 1000},
-                Prefix=f"{archive_prefix}{lsn_prefix}/",
+                Prefix=f"{archive_prefix}{shortened_lsn}/",
             )
             for page in page_iterator:
                 for obj in page["Contents"]:
                     filename = obj["Key"].split("/")[-1]
-                    if filename.startswith(lsn) and filename.endswith(".lz4"):
+                    file_lsn = int(filename[:24], 16)
+                    # Check is LSN is in the start/stop range
+                    if start_lsn <= file_lsn <= stop_lsn and filename.endswith(".lz4"):
                         files_to_copy.append(obj["Key"])
-                        short_lsns.add(lsn_prefix)
+                        short_lsns.add(shortened_lsn)
     return files_to_copy
 
 
@@ -196,23 +200,26 @@ def migrate_backups(
     s3_resource, s3 = get_s3(None, None)
     for bucket in ["aspiredu-pgbackups", "aspiredu-pgbackups-au"]:
         for stanza_prefix, bucket_folder_prefix in get_backups_to_migrate(s3, bucket, cluster):
+            backup_folder = None
+            if match := CRUNCHYBRIDGE_BACKUP_PATTERN.match(bucket_folder_prefix.split("/")[-2]):
+                backup_folder = match.groups()[0]
+                if target and target != backup_folder:
+                    continue
+            if not backup_folder:
+                continue
             files_to_copy = backup_files_to_copy(
                 s3, bucket, stanza_prefix, bucket_folder_prefix
             ) + archive_files_to_copy(
                 s3, bucket, stanza_prefix.replace("/backup/", "/archive/"), bucket_folder_prefix
             )
-            if match := CRUNCHYBRIDGE_BACKUP_PATTERN.match(bucket_folder_prefix.split("/")[-2]):
-                backup_folder = match.groups()[0]
-                if target and target != backup_folder:
-                    continue
-                copy_files(
-                    s3,
-                    bucket,
-                    files_to_copy,
-                    backup_folder,
-                    storage_class=storage_class,
-                    dry_run=dry_run,
-                )
+            copy_files(
+                s3,
+                bucket,
+                files_to_copy,
+                backup_folder,
+                storage_class=storage_class,
+                dry_run=dry_run,
+            )
 
 
 def main():
