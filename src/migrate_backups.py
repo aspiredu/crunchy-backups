@@ -86,13 +86,13 @@ def parse_manifest(body) -> (str, str):
     return start, stop
 
 
-def get_backups_to_migrate(s3, bucket, cluster=None):
+def get_backups_to_migrate(s3, bucket, cluster):
     cluster_prefixes = [
         f'{common_prefix["Prefix"]}'
         for common_prefix in s3.list_objects(Bucket=bucket, Prefix="crunchybridge/", Delimiter="/")[
             "CommonPrefixes"
         ]
-        if not cluster or common_prefix["Prefix"].endswith(cluster + "/")
+        if common_prefix["Prefix"].endswith(cluster + "/")
     ]
     for cluster_prefix in cluster_prefixes:
         stanza_prefixes = [
@@ -125,7 +125,6 @@ def archive_files_to_copy(s3, bucket, stanza_prefix, backup_folder_prefix):
     ]
     for obj in archive_prefixes:
         archive_prefix = obj["Prefix"]
-        short_lsns = set()
         # Iterate over 16 digit hex number.
         for shortened_lsn in lsn_in_range(start[:16], stop[:16]):
             paginator = s3.get_paginator("list_objects")
@@ -141,7 +140,6 @@ def archive_files_to_copy(s3, bucket, stanza_prefix, backup_folder_prefix):
                     # Check is LSN is in the start/stop range
                     if start_lsn <= file_lsn <= stop_lsn and filename.endswith(".lz4"):
                         files_to_copy.append(obj["Key"])
-                        short_lsns.add(shortened_lsn)
     return files_to_copy
 
 
@@ -192,7 +190,7 @@ def copy_files(s3, bucket, files_to_copy, backup_folder, storage_class, dry_run=
 
 def migrate_backups(
     *,
-    cluster: Optional[str],
+    cluster: str,
     target: Optional[str],
     storage_class: Optional[str],
     dry_run: bool = False,
@@ -241,8 +239,8 @@ def main():
 
     parser.add_argument(
         "--cluster",
-        required=False,
-        help="(Optional) The name of the database cluster to pretend to create",
+        required=True,
+        help="The name of the database cluster to pretend to create",
     )
     parser.add_argument(
         "--dry-run",
