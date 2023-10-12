@@ -35,7 +35,7 @@ cd $HOME/crunchy-backups/
 pip3 install -r requirements.txt
 
 echo "Creating .env file"
-tee ./bin/.env <<EOF
+tee .env <<EOF
 CRUNCHY_API_KEY = "${CRUNCHY_API_KEY}"
 CRUNCHY_TEAM_ID = "${CRUNCHY_TEAM_ID}"
 
@@ -48,7 +48,7 @@ LOCAL_TEMP_DOWNLOADS_PATH = "$LOCAL_TEMP_DOWNLOADS_PATH"
 EOF
 
 echo "Running script..."
-python3 ./src/crunchy_copy.py --cluster ${ASPIRE_CLUSTER}
+python3 -m src.crunchy_copy --cluster ${ASPIRE_CLUSTER}
 
 COUNTER=1
 while true
