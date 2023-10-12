@@ -65,7 +65,7 @@ terraform init -backend-config="key=$TF_VAR_ASPIRE_CLUSTER/terraform.tfstate"
 terraform plan
 ```
 
-7. Run the following command to apply the changes from Step 5 and provision the specified resources from AWS:
+7. Run the following command to apply the changes from Step 6 and provision the specified resources from AWS:
 
 ```
 terraform apply
