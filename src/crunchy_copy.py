@@ -5,6 +5,7 @@ import shutil
 import subprocess
 from datetime import datetime
 from http import HTTPStatus
+from typing import Optional
 from zoneinfo import ZoneInfo
 
 import requests
@@ -13,6 +14,7 @@ from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 
 from src.s3 import get_s3
+from src.schedule import is_valid_saturday
 
 # ENV Variables
 load_dotenv()
@@ -298,6 +300,31 @@ class CrunchyCopy:
         signal_dead_mans_snitch(self.cluster["name"])
 
 
+def validate_target(target: Optional[str] = None):
+    """
+    Determine if the backup target is valid.
+
+    This should check to see if the string representation of the date
+    is a date and whether it's a valid Saturday.
+
+    It should return the string version of the date so it can
+    be used in file paths with S3.
+    """
+    if not target:
+        target_date = datetime.now()
+    else:
+        try:
+            target_date = datetime.strptime(target, "%Y%m%d")
+        except ValueError:
+            raise argparse.ArgumentTypeError(
+                f"{target} is not a valid date. It must be in the format YYYYMMDD."
+            )
+
+    if not is_valid_saturday(target_date):
+        raise ValueError(f"Today {target_date} is not a valid Saturday")
+    return target_date.strftime("%Y%m%d")
+
+
 def main():
     # Optionally set up Sentry Integration
     if SENTRY_DSN:
@@ -336,10 +363,15 @@ def main():
     bucket_name = (
         "aspiredu-pgbackups" if args.cluster not in AU_BACKENDS else "aspiredu-pgbackups-au"
     )
-    backup_target = args.target or datetime.now().strftime("%Y%m%d")
-    CrunchyCopy(
-        bucket_name, args.cluster, backup_target=backup_target, dry_run=args.dry_run
-    ).process()
+    try:
+        backup_target = validate_target(args.target)
+    except ValueError:
+        pass
+    else:
+        # If we have a valid Saturday, process the data.
+        CrunchyCopy(
+            bucket_name, args.cluster, backup_target=backup_target, dry_run=args.dry_run
+        ).process()
     exit(0)
 
 
