@@ -321,7 +321,7 @@ def validate_target(target: Optional[str] = None):
             )
 
     if not is_valid_saturday(target_date):
-        raise ValueError(f"Today {target_date} is not a valid Saturday")
+        raise ValueError(f"{target_date} is not a valid Saturday")
     return target_date.strftime("%Y%m%d")
 
 
