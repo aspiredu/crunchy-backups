@@ -3,6 +3,10 @@ from datetime import datetime
 from dateutil import relativedelta, rrule
 
 
+def is_saturday(value) -> bool:
+    return value.weekday() == 5
+
+
 def is_valid_saturday(value) -> bool:
     """
     Determine if date is the first or third Saturday of the month.

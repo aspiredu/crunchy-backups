@@ -14,7 +14,7 @@ from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 
 from src.s3 import get_s3
-from src.schedule import is_valid_saturday
+from src.schedule import is_saturday, is_valid_saturday
 
 # ENV Variables
 load_dotenv()
@@ -47,6 +47,14 @@ TZ = ZoneInfo("US/Eastern")
 
 class CantFindCrunchyBridgeCluster(ValueError):
     pass
+
+
+class InvalidSaturday(ValueError):
+    """The day is a Saturday, but the wrong one"""
+
+
+class InvalidDay(ValueError):
+    """The day is not a Saturday"""
 
 
 def get_crunchy_clusters():
@@ -321,7 +329,10 @@ def validate_target(target: Optional[str] = None):
             )
 
     if not is_valid_saturday(target_date):
-        raise ValueError(f"{target_date} is not a valid Saturday")
+        if is_saturday(target_date):
+            raise InvalidSaturday(f"{target_date} is not a valid Saturday")
+        else:
+            raise InvalidDay(f"{target_date} is not a Saturday")
     return target_date.strftime("%Y%m%d")
 
 
@@ -365,7 +376,11 @@ def main():
     )
     try:
         backup_target = validate_target(args.target)
-    except ValueError:
+    except InvalidSaturday:
+        # Deadmans snitch has either a weekly or monthly check-in. If it's a
+        # Saturday, we should signal it so that we don't get an alert.
+        signal_dead_mans_snitch(args.cluster)
+    except InvalidDay:
         pass
     else:
         # If we have a valid Saturday, process the data.
