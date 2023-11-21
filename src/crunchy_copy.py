@@ -303,9 +303,9 @@ class CrunchyCopy:
             script_start,
             datetime.utcnow().replace(tzinfo=TZ),
         )
-
-        # Signal Dead Man's Snitch and terminate
-        signal_dead_mans_snitch(self.cluster["name"])
+        if not self.dry_run:
+            # Signal Dead Man's Snitch and terminate
+            signal_dead_mans_snitch(self.cluster["name"])
 
 
 def validate_target(target: Optional[str] = None):
