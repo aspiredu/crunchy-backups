@@ -23,6 +23,7 @@ resource "aws_instance" "cb_backup" {
     GIT_PAT                      = var.GIT_PAT
     ASPIRE_CLUSTER               = var.ASPIRE_CLUSTER
     SENTRY_DSN                   = var.SENTRY_DSN
+    BACKUP_TARGET                = var.BACKUP_TARGET
   }))
 }
 

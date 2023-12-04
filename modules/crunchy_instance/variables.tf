@@ -54,3 +54,9 @@ variable "SENTRY_DSN" {
   type        = string
   default     = ""
 }
+
+variable "BACKUP_TARGET" {
+  description = "(Optional) The backup to target. Needs to be in the format YYYYMMDD"
+  type        = string
+  default     = ""
+}
