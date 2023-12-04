@@ -1,0 +1,94 @@
+name: '[Adhoc] Start Script via Terraform'
+
+on:
+  workflow_dispatch:
+    inputs:
+      backend:
+        type: choice
+        description: 'The database to backup.'
+        required: true
+        options:
+          - aspireprod
+          - aspiredu-au
+          - aspiredu-ms
+          - aspiredu-prd-a
+          - aspiredu-prd-b
+          - aspiredu-prd-c
+          - aspiredu-prd-d
+          - aspiredu-prd-e
+          - aspiredu-prd-g
+          - aspiredu-prd-h
+          - aspiredu-prd-i
+          - aspiredu-prd-j
+          - aspiredu-prd-k
+          - aspiredu-prd-l
+      working_dir:
+        type: choice
+        description: 'The working dir for the copy process to run out of. Only aspiredu-au should use au'
+        required: true
+        options:
+          - us-east
+          - au
+        default: us-east
+      backup_target:
+        description: 'The backup target to use. Should be in the format YYYYMMDD'
+        required: true
+
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment: crunchy-backups
+    steps:
+      - name: Checkout Commit
+        uses: actions/checkout@v3
+      - name: Deploy With Terraform
+        id: deployAttempt1
+        uses: ./.github/actions/tf-deploy-composite
+        continue-on-error: true
+        with:
+          TERRAFORM_AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
+          TERRAFORM_AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
+          CRUNCHY_TEAM_ID: ${{ vars.CRUNCHY_TEAM_ID }}
+          CRUNCHY_API_KEY: ${{ secrets.CRUNCHY_API_KEY }}
+          ASPIRE_AWS_ACCESS_KEY_ID: ${{ secrets.ASPIRE_AWS_ACCESS_KEY_ID }}
+          ASPIRE_AWS_SECRET_ACCESS_KEY: ${{ secrets.ASPIRE_AWS_SECRET_ACCESS_KEY }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          backend: ${{ github.event.inputs.backend }}
+          WORKING_DIR: ${{ github.event.inputs.working_dir }}
+          BACKUP_TARGET: ${{ github.event.inputs.backup_target }}
+      - name: Deploy With Terraform Attempt 2
+        id: deployAttempt2
+        uses: ./.github/actions/tf-deploy-composite
+        if: ${{ steps.deployAttempt1.outcome == 'failure' }}
+        continue-on-error: true
+        with:
+          TERRAFORM_AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
+          TERRAFORM_AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
+          CRUNCHY_TEAM_ID: ${{ vars.CRUNCHY_TEAM_ID }}
+          CRUNCHY_API_KEY: ${{ secrets.CRUNCHY_API_KEY }}
+          ASPIRE_AWS_ACCESS_KEY_ID: ${{ secrets.ASPIRE_AWS_ACCESS_KEY_ID }}
+          ASPIRE_AWS_SECRET_ACCESS_KEY: ${{ secrets.ASPIRE_AWS_SECRET_ACCESS_KEY }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          backend: ${{ github.event.inputs.backend }}
+          WORKING_DIR: ${{ github.event.inputs.working_dir }}
+          BACKUP_TARGET: ${{ github.event.inputs.backup_target }}
+      - name: Deploy With Terraform Attempt 3
+        id: deployAttempt3
+        uses: ./.github/actions/tf-deploy-composite
+        if: ${{ steps.deployAttempt1.outcome == 'failure' && steps.deployAttempt2.outcome == 'failure' }}
+        continue-on-error: true
+        with:
+          TERRAFORM_AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_AWS_ACCESS_KEY_ID }}
+          TERRAFORM_AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
+          CRUNCHY_TEAM_ID: ${{ vars.CRUNCHY_TEAM_ID }}
+          CRUNCHY_API_KEY: ${{ secrets.CRUNCHY_API_KEY }}
+          ASPIRE_AWS_ACCESS_KEY_ID: ${{ secrets.ASPIRE_AWS_ACCESS_KEY_ID }}
+          ASPIRE_AWS_SECRET_ACCESS_KEY: ${{ secrets.ASPIRE_AWS_SECRET_ACCESS_KEY }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          backend: ${{ github.event.inputs.backend }}
+          WORKING_DIR: ${{ github.event.inputs.working_dir }}
+          BACKUP_TARGET: ${{ github.event.inputs.backup_target }}

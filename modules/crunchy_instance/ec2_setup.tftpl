@@ -47,8 +47,15 @@ ASPIRE_AWS_SECRET_ACCESS_KEY = "${ASPIRE_AWS_SECRET_ACCESS_KEY}"
 LOCAL_TEMP_DOWNLOADS_PATH = "$LOCAL_TEMP_DOWNLOADS_PATH"
 EOF
 
+if [ -z "$BACKUP_TARGET" ]; then
+    echo "No BACKUP_TARGET specified"
+    TARGET_PARAM=""
+else
+    TARGET_PARAM="--target ${BACKUP_TARGET}"
+fi
+
 echo "Running script..."
-python3 -m src.crunchy_copy --cluster ${ASPIRE_CLUSTER}
+python3 -m src.crunchy_copy --cluster ${ASPIRE_CLUSTER} ${TARGET_PARAM}
 
 COUNTER=1
 while true
