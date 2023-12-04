@@ -47,13 +47,13 @@ ASPIRE_AWS_SECRET_ACCESS_KEY = "${ASPIRE_AWS_SECRET_ACCESS_KEY}"
 LOCAL_TEMP_DOWNLOADS_PATH = "$LOCAL_TEMP_DOWNLOADS_PATH"
 EOF
 
-BACKUP_TARGET=${BACKUP_TARGET}
+BACKUP_TARGET="${BACKUP_TARGET}"
 
 echo "Running script..."
 if [ -z "$BACKUP_TARGET" ]; then
     python3 -m src.crunchy_copy --cluster ${ASPIRE_CLUSTER}
 else
-    python3 -m src.crunchy_copy --cluster ${ASPIRE_CLUSTER} --target="$BACKUP_TARGET"
+    python3 -m src.crunchy_copy --cluster ${ASPIRE_CLUSTER} --target "$BACKUP_TARGET"
 fi
 
 COUNTER=1
