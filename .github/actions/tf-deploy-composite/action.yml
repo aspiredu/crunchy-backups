@@ -21,6 +21,8 @@ inputs:
     required: true
   WORKING_DIR:
     required: true
+  BACKUP_TARGET:
+    required: false
 runs:
   using: "composite"
   steps:
@@ -53,6 +55,7 @@ runs:
         TF_VAR_SENTRY_DSN: ${{ inputs.SENTRY_DSN }}
         AWS_ACCESS_KEY_ID: ${{ inputs.TERRAFORM_AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.TERRAFORM_AWS_SECRET_ACCESS_KEY }}
+        TF_VAR_BACKUP_TARGET: ${{ inputs.BACKUP_TARGET }}
     - name: Terraform Apply
       id: apply
       run: |
