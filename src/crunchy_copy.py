@@ -379,7 +379,8 @@ def main():
     except InvalidSaturday:
         # Deadmans snitch has either a weekly or monthly check-in. If it's a
         # Saturday, we should signal it so that we don't get an alert.
-        signal_dead_mans_snitch(args.cluster)
+        if not args.dry_run:
+            signal_dead_mans_snitch(args.cluster)
     except InvalidDay:
         pass
     else:
