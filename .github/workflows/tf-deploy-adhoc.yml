@@ -22,6 +22,7 @@ on:
           - aspiredu-prd-j
           - aspiredu-prd-k
           - aspiredu-prd-l
+          - aspiredu-prd-m
       working_dir:
         type: choice
         description: 'The working dir for the copy process to run out of. Only aspiredu-au should use au'
